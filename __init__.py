@@ -18,12 +18,12 @@
 # ##### END GPL LICENSE BLOCK #####
 
 bl_info = {
-    "name" : "Topology Kit",
-    "author" : "dustractor",
+    "name" : "tKit",
+    "author" : "Shams Kitz dustractor@gmail.com bpygram.us",
     "version" : (2, 3),
     "blender" : (2, 5, 9),
     "api" : 39355,
-    "location" : "View3d > Ui > topokit",
+    "location" : "View3d > Edit Mesh Specials (W key)",
     "description" : "Variouf wayf to felect neighboring elementf.",
     "warning" : "",
     "wiki_url" : "",
@@ -342,99 +342,6 @@ def kit_unregister():
     del bpy.types.Mesh.e_lon
     del bpy.types.Mesh.life
 
-class ArcMenuOp(bpy.types.Operator):
-    arc_resolution=12
-    arc_radius=64
-    arc_font='/Library/Fonts/Osaka.ttf'
-    arc_textsize=11
-    arc_textdpi=109
-    tmp=bpy.props.StringProperty()
-    def init(self):
-        self.UP=Vector((0,1,0))
-        self.sector_count=len(self.sector_list)
-        self.arc_length=(pi*2)/self.sector_count
-        self.arc_stepsize=1/self.arc_resolution
-        self.font_id=blf.load(self.arc_font)
-    def text(self,text,pos):
-        blf.position(self.font_id, pos.x, pos.y, 0)
-        blf.size(self.font_id, self.arc_textsize, self.arc_textdpi)
-        blf.draw(self.font_id, text)
-    def draw_sectors(self,draw_position,active_position):
-        a=active_position-draw_position
-        a.normalize()
-        if active_position.x>draw_position.x:
-            angleC=pi+a.to_track_quat('-Y','Z').angle
-        else:
-            angleC=a.to_track_quat('Y','Z').angle
-        for i in range(self.sector_count):
-            angleA=i*self.arc_length
-            angleB=angleA+self.arc_length
-            if (angleC > angleA) and (angleC < angleB):            
-                bgl.glColor4f(1.0,0.0,0.0,0.5)
-                self.tmp=self.sector_list[i]
-            else:
-                bgl.glColor4f(0.0,1.0,0.0,0.2)
-            A=Euler((0,0,angleA)).to_quaternion()
-            B=Euler((0,0,angleB)).to_quaternion()
-            bgl.glBegin(bgl.GL_LINE_STRIP)
-            for j in range(self.arc_resolution):
-                pos=self.UP*self.arc_radius
-                rot=A.slerp(B,j*self.arc_stepsize)
-                pos.rotate(rot)
-                pos+=draw_position
-                bgl.glVertex2f(pos.x,pos.y)
-            bgl.glEnd()
-            Tp=self.UP*(2*self.arc_radius)
-            Tr=A.slerp(B,0.5)
-            Tp.rotate(Tr)
-            Tp+=draw_position
-            self.text(self.sector_list[i],Tp)
-    def dpx(self,context):
-        self.draw_sectors(self.initv,self.mouse)
-    def modal(self, context, event):
-        context.area.tag_redraw()
-        if event.type == 'MOUSEMOVE':
-            self.mouse=Vector((event.mouse_region_x, event.mouse_region_y,0))
-        elif event.type == 'LEFTMOUSE':
-            context.region.callback_remove(self._handle)
-            if self.tmp:
-                exec("bpy.ops.%s('INVOKE_DEFAULT')"%self.tmp)
-            return {'FINISHED'}
-        elif event.type in {'RIGHTMOUSE', 'ESC'}:
-            context.region.callback_remove(self._handle)
-            return {'CANCELLED'}
-        return {'RUNNING_MODAL'}
-    def invoke(self, context, event):
-        if context.area.type == 'VIEW_3D':
-            self.init()
-            context.window_manager.modal_handler_add(self)
-            self.initv=Vector((event.mouse_region_x, event.mouse_region_y,0))
-            self._handle = context.region.callback_add(self.dpx, (context,), 'POST_PIXEL')
-            return {'RUNNING_MODAL'}
-        else:
-            self.report({'WARNING'}, "View3D not found, cannot run operator")
-            return {'CANCELLED'}
-
-class TK_ArcMenu_SelectMeshElemNeighbors(ArcMenuOp,R):
-    bl_idname = "view3d.arcmenu_nns"
-    bl_label = "arcmenu -Neighboring Element Selection"
-    sector_list=['object.svv','object.see','object.sff','object.jsvv','object.jsee','object.jsff']
-
-class TK_ArcMenu_EdgeSelectors_lnr(ArcMenuOp,R):
-    bl_idname = "view3d.arcmenu_ees"
-    bl_label = "arcmenu -Edge Selection  - Inclusive"
-    sector_list=['object.e_lat','object.e_lon','object.je_lat','object.je_lon']
-
-class TK_ArcMenu_EdgeSelectors_stat(ArcMenuOp,R):
-    bl_idname = "view3d.arcmenu_nns"
-    bl_label = "arcmenu -Edge Selection state calculations"
-    sector_list=['object.je','object.jei']
-
-class TK_ArcMenu_ConwaysLife(ArcMenuOp,R):
-    bl_idname = "view3d.arcmenu_conway"
-    bl_label = "arcmenu -conway"
-    sector_list=['object.life']
-
 def _clear():
     bpy.ops.object.editmode_toggle()
     bpy.ops.mesh.select_all(action='DESELECT')
@@ -606,175 +513,48 @@ class MESH_OT_life(bpy.types.Operator,R):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
-class AddDelta(bpy.types.Operator,R):
-    '''Three faces and four verts (one center vert)'''
-    bl_idname='mesh.primitive_delt_add'
-    bl_label='Add Delta'
-    bl_options={'REGISTER','UNDO'}
-
-    def execute(self,context):
-        v=[(0.0,0.0,0.0)]
-        f=[]
-        side=(pi*2)/3
-        for i in range(3):
-            s=i*side
-            x=(cos(s),sin(s),0.0)
-            v.append(x)
-        for i in range(1,3):
-            f.append((0,i,i+1))
-        f.append((0,3,1))
-        mesh=bpy.data.meshes.new('Tri')
-        mesh.from_pydata(v,[],f)
-        mesh.update()
-        obj=bpy.data.objects.new('Tri',mesh)
-        context.scene.objects.link(obj)
-        obj.location=context.space_data.cursor_location
-        obj.select=True
-        context.scene.objects.active=obj
-        return {'FINISHED'}
-
-class AddTriangle(bpy.types.Operator,R):
-    '''Adds a triangle'''
-    bl_idname='mesh.primitive_tri_add'
-    bl_label='Add Triangle'
-    bl_options={'REGISTER','UNDO'}
-    def execute(self,context):
-        mesh=bpy.data.meshes.new('Tri')
-        mesh.from_pydata(
-            [(sin(t),cos(t),0.0) for t in [(i*pi*2.0)/3.0 for i in [0,1,2]]],
-            [],
-            [(0,1,2)]
-            )
-        mesh.update()
-        obj=bpy.data.objects.new('Tri',mesh)
-        context.scene.objects.link(obj)
-        obj.location=context.space_data.cursor_location
-        obj.select=True
-        context.scene.objects.active=obj
-        return {'FINISHED'}
-
-class exmerge(bpy.types.Operator,R):
-    bl_idname='object.exmerge'
-    bl_label='Extrude+Merge'
-    bl_options={'REGISTER','UNDO'}
-    def execute(self,context):
-        if len(context.object.data.vertices) > 3:
-            bpy.context.tool_settings.mesh_select_mode=(False,False,True)
-            bpy.ops.mesh.extrude(type='FACES')
-            bpy.ops.mesh.merge(type='COLLAPSE')
-        return {'FINISHED'}
-
-def topokit_buttons(self,context):
-    Vm,Em,Fm=context.tool_settings.mesh_select_mode
-    self.layout.row().label("TopoKit:")
-    b=self.layout.box()
-    s=b.split(align=True)
-    c1,c2,c3=s.column(),s.column(),s.column()
-    c1.active,c2.active,c3.active=(Vm,Em,Fm)
-    c1.operator("object.svv")
-    c2.operator("object.see")
-    c3.operator("object.sff")
-
-    c1.operator("object.jsvv")
-    c2.operator("object.jsee")
-    c3.operator("object.jsff")
-
-    s=b.split(align=True)
-    s.active=Em
-    c1,c2=(s.column(),s.column())
-
-    c1.operator("object.je")
-    c2.operator("object.jei")
-
-    c1.operator("object.je_lat")
-    c2.operator("object.je_lon")
-
-    c1.operator("object.e_lat")
-    c2.operator("object.e_lon")
-
-    r=b.row()
-    r.active=Fm
-    r.operator("object.life")
-
-class tk_buttons_on(bpy.types.Operator,R):
-    bl_idname="object.tk_on"
-    bl_label="put buttons in v3dMT panel"
-    def execute(self,context):
-        bpy.types.VIEW3D_PT_tools_meshedit.append(topokit_buttons)
-        return {'FINISHED'}
-
-class tk_buttons_off(bpy.types.Operator,R):
-    bl_idname="object.tk_off"
-    bl_label="remove buttons from v3dMT panel"
-    def execute(self,context):
-        bpy.types.VIEW3D_PT_tools_meshedit.remove(topokit_buttons)
-        return {'FINISHED'}
-
-def exmerge_menu(self,context):
-    self.layout.operator('object.exmerge')
-
-class TopoKitAuxMenu(bpy.types.Menu,R):
-    bl_idname="VIEW3D_MT_topokit_aux_menu"
-    bl_label="Aux"
-    def draw(self,context):
-        l=self.layout
-        l.operator('object.exmerge')
-
 class TopoKitMenu(bpy.types.Menu,R):
     bl_idname="VIEW3D_MT_topokit_menu"
     bl_label="TopoKit"
     def draw(self,context):
         l=self.layout
+        c=l.split()
+        a,b=(c.column(),c.column())
+        a.label('simple growth')
+        a.operator("object.svv")
+        a.operator("object.see")
+        a.operator("object.sff")
+        a.separator()
+        a.operator("object.e_lat")
+        a.operator("object.e_lon")
+        b.label("replace selection")
+        b.operator("object.jsvv")
+        b.operator("object.jsee")
+        b.operator("object.jsff")
+        b.separator()
+        b.operator("object.je")
+        b.operator("object.jei")
+        b.separator()
+        b.separator()
+        b.operator("object.je_lat")
+        b.operator("object.je_lon")
+        l.row().separator()
+        l.row().operator("object.life")
 
-        l.operator("object.svv")
-        l.operator("object.see")
-        l.operator("object.sff")
-        l.separator()
-        l.operator("object.jsvv")
-        l.operator("object.jsee")
-        l.operator("object.jsff")
-        l.separator()
-        l.operator("object.je")
-        l.operator("object.jei")
-        l.separator()
-        l.operator("object.e_lat")
-        l.operator("object.e_lon")
-        l.separator()
-        l.operator("object.je_lat")
-        l.operator("object.je_lon")
-        l.separator()
-        l.operator("object.life")
 
-
-def topokit_mainmenu(self,context):
+def topokit_menu(self,context):
     self.layout.menu("VIEW3D_MT_topokit_menu")
-
-def tri_menu_func(self,context):
-    self.layout.operator(AddTriangle.bl_idname,icon='MESH_DATA')
-
-def delt_menu_func(self,context):
-    self.layout.operator(AddDelta.bl_idname,icon='PLAY')
-
-def ui_register():
-    bpy.types.VIEW3D_MT_edit_mesh_specials.append(topokit_mainmenu)
-    bpy.types.INFO_MT_mesh_add.append(tri_menu_func)
-    bpy.types.INFO_MT_mesh_add.append(delt_menu_func)
-
-def ui_unregister():
-    bpy.types.INFO_MT_mesh_add.remove(tri_menu_func)
-    bpy.types.INFO_MT_mesh_add.remove(delt_menu_func)
-    bpy.types.VIEW3D_MT_edit_mesh_specials.remove(topokit_mainmenu)
 
 
 def register():
     kit_register()
     list(map(bpy.utils.register_class, R.__subclasses__()))
-    ui_register()
+    bpy.types.VIEW3D_MT_edit_mesh_specials.append(topokit_menu)
 
 def unregister():
     kit_unregister()
     list(map(bpy.utils.unregister_class,R.__subclasses__()))
-    ui_unregister()
+    bpy.types.VIEW3D_MT_edit_mesh_specials.remove(topokit_menu)
 
 if __name__=="__main__":
     register()
