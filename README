@@ -1,0 +1,35 @@
+WHAT IS tkit AND WHY AM I SO COMFORTABLE WITH REINVENTING THE WHEEL?
+
+tkit stands for topology kit.
+I was calling it topokit but tkit is fewer letters and is a rearrangement of the letters in my last name, so there.
+
+topology kit?
+
+consider this matrix of hypothetical functions:
+(from/to)
+    v    e    f
+   -------------
+v | vv   ve   vf
+e | ev   ee   ef
+f | vf   fe   ff
+
+
+got it?
+
+ok. so the first thing you're gonna notice is that ev,vf, and fe are useless.
+but the important thing is that vv,ee, and ff (the diagonals) represent
+a traversal from an element to it's neighboring elements.
+
+ve,vf, and ef  are NOT neighboring-element-returning functions.  However, they are helpful as intermediate maps in some cases.
+
+Nevermind all that and check out ee.
+
+ee is in the middle and has several variations.
+
+EDGE to EDGE
+wow. there's a lot of ways just to do that.  are we talking about laterals, longitudinals, both? Neither?  Maybe.
+
+
+when you ctrl+PLUS or ctrl+MINUS to shrink or grow, thats basically what is happening here, except this is the novel version and that is the optimized way to do it.  given that there is more than one way to skin any given cat, my particular way is probably the second-least-optimized method.  However, that's not really the point.  The point is:
+A: to have fine-grained selection
+B: a programmers toolkit that will eventually allow more logical and descriptive terms to be used  (yes, the current terms are inscrutably dense.)
