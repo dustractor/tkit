@@ -39,11 +39,8 @@ from mathutils import Vector,Euler
 
 class R:pass
 
-
-
 def true(x):
     x.select=True
-
 
 @property
 def eki(mesh):
@@ -747,11 +744,7 @@ class TopoKitMenu(bpy.types.Menu,R):
         l.operator("object.je_lon")
         l.separator()
         l.operator("object.life")
-        l.separator()
-        l.operator("object.tk_on")
-        l.operator("object.tk_off")
-        l.separator()
-        l.menu("VIEW3D_MT_topokit_aux_menu")
+
 
 def topokit_mainmenu(self,context):
     self.layout.menu("VIEW3D_MT_topokit_menu")
