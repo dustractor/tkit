@@ -1,4 +1,4 @@
-# Topokit v1.0 Several functions to select neighboring elements in a topology.
+# tkit.py v0.9 sep 4 2011 Several functions to select neighboring elements in a topology.
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
@@ -18,24 +18,19 @@
 # ##### END GPL LICENSE BLOCK #####
 
 bl_info = {
-    "name" : "tKit",
-    "author" : "Shams Kitz dustractor@gmail.com bpygram.us",
-    "version" : (2, 3),
+    "name" : "Topokit",
+    "author" : "Shams Kitz / dustractor@gmail.com",
+    "version" : (0, 9),
     "blender" : (2, 5, 9),
     "api" : 39355,
-    "location" : "View3d > Edit Mesh Specials (W key)",
+    "location" : "View3d > Edit Mesh Specials (W key) > topokit",
     "description" : "Variouf wayf to felect neighboring elementf.",
     "warning" : "",
     "wiki_url" : "",
-    "tracker_url" : "",
+    "tracker_url" : "github.com/dustractor/tkit",
     "category" : "Mesh"
 }
 import bpy
-import bgl
-import blf
-
-from math import degrees,radians,sin,cos,pi
-from mathutils import Vector,Euler
 
 class R:pass
 

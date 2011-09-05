@@ -1,3 +1,6 @@
+
+
+
 WHAT IS tkit AND WHY AM I SO COMFORTABLE WITH REINVENTING THE WHEEL?
 
 tkit stands for topology kit.
@@ -34,8 +37,10 @@ when you ctrl+PLUS or ctrl+MINUS to shrink or grow, thats basically what is happ
 A: to have fine-grained selection
 B: a programmers toolkit that will eventually allow more logical and descriptive terms to be used  (yes, the current terms are inscrutably dense programmer's shorthand.)
 
-for usage, colorful charts and graphs, etc… navigate to:
+usage -- http://bpygram.us
 
-http://bpygram.us
+repo -- github.com/dustractor/tkit
+
+me  -- dustractor@gmail.com
 
 thanks for checkin it out!
