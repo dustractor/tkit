@@ -33,9 +33,6 @@ bl_info = {
 import bpy
 
 
-class Registrant:pass
-
-
 def true(x):
     x.select = True
 
@@ -355,6 +352,10 @@ def _clear():
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.editmode_toggle()
 
+
+class Registrant:pass
+
+
 class MESH_OT_svv(bpy.types.Operator, Registrant):
     '''The set of selected verts AND their vert neighbors.'''
     bl_idname = "object.svv"
@@ -366,6 +367,7 @@ class MESH_OT_svv(bpy.types.Operator, Registrant):
         context.active_object.data.vsel=context.active_object.data.svv
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
+
 
 class MESH_OT_see(bpy.types.Operator, Registrant):
     '''The set of selected edges AND their edge neighbors.'''
@@ -379,6 +381,7 @@ class MESH_OT_see(bpy.types.Operator, Registrant):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
+
 class MESH_OT_sff(bpy.types.Operator, Registrant):
     '''The set of selected face AND their face neighbors*.'''
     bl_idname="object.sff"
@@ -390,6 +393,7 @@ class MESH_OT_sff(bpy.types.Operator, Registrant):
         context.active_object.data.fsel=context.active_object.data.sff
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
+
 
 class MESH_OT_jsvv(bpy.types.Operator, Registrant):
     '''Just the neigbors of the selected vertices.'''
@@ -405,6 +409,7 @@ class MESH_OT_jsvv(bpy.types.Operator, Registrant):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
+
 class MESH_OT_jsee(bpy.types.Operator, Registrant):
     '''Just the neigbors of the selected edges'''
     bl_idname="object.jsee"
@@ -418,6 +423,7 @@ class MESH_OT_jsee(bpy.types.Operator, Registrant):
         context.active_object.data.esel=t
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
+
 
 class MESH_OT_jsff(bpy.types.Operator, Registrant):
     '''Just the neighbors of the selected faces*'''
@@ -433,6 +439,7 @@ class MESH_OT_jsff(bpy.types.Operator, Registrant):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
+
 class MESH_OT_je(bpy.types.Operator, Registrant):
     bl_idname="object.je"
     bl_label="Only the Edges"
@@ -445,6 +452,7 @@ class MESH_OT_je(bpy.types.Operator, Registrant):
         context.active_object.data.esel=t
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
+
 
 class MESH_OT_jei(bpy.types.Operator, Registrant):
     bl_idname="object.jei"
@@ -459,6 +467,7 @@ class MESH_OT_jei(bpy.types.Operator, Registrant):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
+
 class MESH_OT_e_lat(bpy.types.Operator, Registrant):
     bl_idname="object.e_lat"
     bl_label="Lateral Edge Neighbors"
@@ -469,6 +478,7 @@ class MESH_OT_e_lat(bpy.types.Operator, Registrant):
         context.active_object.data.esel=context.active_object.data.e_lat
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
+
 
 class MESH_OT_e_lon(bpy.types.Operator, Registrant):
     bl_idname="object.e_lon"
@@ -481,9 +491,10 @@ class MESH_OT_e_lon(bpy.types.Operator, Registrant):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
+
 class MESH_OT_je_lat(bpy.types.Operator, Registrant):
     bl_idname="object.je_lat"
-    bl_label="Lateral Edge Neighbors"
+    bl_label="Only Lateral Edge Neighbors"
     bl_options={'REGISTER','UNDO'}
     def execute(self,context):
         bpy.context.tool_settings.mesh_select_mode=(False,True,False)
@@ -494,9 +505,10 @@ class MESH_OT_je_lat(bpy.types.Operator, Registrant):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
+
 class MESH_OT_je_lon(bpy.types.Operator, Registrant):
     bl_idname="object.je_lon"
-    bl_label="Longitudinal Edge Neighbors"
+    bl_label="Only Longitudinal Edge Neighbors"
     bl_options={'REGISTER','UNDO'}
     def execute(self,context):
         bpy.context.tool_settings.mesh_select_mode=(False,True,False)
@@ -506,6 +518,7 @@ class MESH_OT_je_lon(bpy.types.Operator, Registrant):
         context.active_object.data.esel=t
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
+
 
 class MESH_OT_life(bpy.types.Operator, Registrant):
     '''Apply life* algorithm to face selection.'''
@@ -521,6 +534,7 @@ class MESH_OT_life(bpy.types.Operator, Registrant):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
+
 class TopoKitMenu(bpy.types.Menu, Registrant):
     bl_idname="VIEW3D_MT_topokit_menu"
     bl_label="TopoKit"
@@ -533,8 +547,8 @@ class TopoKitMenu(bpy.types.Menu, Registrant):
         l.row().operator("object.jsee")
         l.row().operator("object.jsff")
         l.row().separator()
-        l.row().operator("object.e_lat")
-        l.row().operator("object.e_lon")
+        l.row().operator("object.je_lat")
+        l.row().operator("object.je_lon")
         l.row().separator()
         l.row().label("Reduce Edge Selection to:")
         l.row().operator("object.je")
@@ -545,15 +559,15 @@ class TopoKitMenu(bpy.types.Menu, Registrant):
         r.row().operator("object.see")
         r.row().operator("object.sff")
         r.row().separator()
-        r.row().operator("object.je_lat")
-        r.row().operator("object.je_lon")
+        r.row().operator("object.e_lat")
+        r.row().operator("object.e_lon")
         r.row().separator()
         r.row().label("Apply alg to Face Selection:")
         r.row().operator("object.life")
-        
+
+
 def topokit_menu(self,context):
     self.layout.menu("VIEW3D_MT_topokit_menu")
-
 
 def register():
     kit_register()
@@ -567,4 +581,3 @@ def unregister():
 
 if __name__=="__main__":
     register()
-
