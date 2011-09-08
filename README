@@ -1,33 +1,11 @@
-tkit?
-
 tkit stands for topology kit.
+It's for making selections based on what's already selected.
 
-I had been calling it 'topokit', but tkit is fewer letters.
+Per Vertex, Edge, or Face, selecting what might be termed ``Neighboring elements``
 
-topology kit?
+Also two other functions that reduce edge selection to either ``inner`` edges or ``just`` the edges.
 
-yes.
-
-It's for making a selection based on what's selected.
-
-Neighbors, of sorts.
-
-Where applicable, there's a version that includes existing selection and one that only selects the resulting set of neighbors.
-
-The ones that include existing selection function as simple growth -- mostly identical to what ctrl+ and ctrl- do already.
-
-
-Play around with it a little bit, and you might find some of these functions useful for UV-seaming.  By no means is this project finished.  I haven't submitted it to bf-extensions basically because 
-
-A) i can't figure out how or exactly where out of the multitude of apparently outdated sites blender development is actually taking place.  THe place i logged in and created an account looked like it hadn't been touched since 2.4x days, and the internets are pretty slow out here, so you know how that is.
-
-and
-
-B)  its just not ready yet.  in the spirit doing all the various operations according to some standard pattern, some of these things got severely DE-optimised.  It's not slow, just naive.  I'm planning on using the foreach getters and setters next, so really large meshes can be processed.  But hey, I thoughtÉ" Why not see if there's any super-coders out there that could show me how they would do it?  or maybe write it in C? Heck, why not assembly lol no well i can wish in one hand and type with the other, right?
-
-
-
-
+Plus one Conway's Life Algorithm that works in face selection mode.
 
 usage -- http://bpygram.us/tkit
 
@@ -40,5 +18,12 @@ thanks for checkin it out!
 
 [INSTALLATION if you don't just fork it]
 
+1.  Click ``downloads`` up there^ if you're reading this at github, which you probably are.
 
-download  __init__.py 
+2.  Decompress the file and place the resulting folder inside your addons folder.
+
+3.  Enable ``Topokit`` in blender's User Preferences > Addons.
+
+[USAGE]
+
+Having a mesh object selected in edit mode, the W key brings up the mesh specials menu.  If the add-on enabled correctly, you should see ``Topokit`` at the bottom of that menu.
