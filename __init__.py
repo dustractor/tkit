@@ -1,4 +1,4 @@
-# tkit.py v1.0 sep 4 2011 Several functions to select neighboring elements in a topology.
+# tkit.py v0.99 sep 4 2011 Several functions to select neighboring elements in a topology.
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 bl_info = {
     "name" : "Topokit",
     "author" : "Shams Kitz / dustractor@gmail.com",
-    "version" : (1, 0),
+    "version" : (0, 9),
     "blender" : (2, 5, 9),
     "api" : 39355,
     "location" : "View3d > Edit Mesh Specials (W key) > topokit",
@@ -347,242 +347,223 @@ def kit_unregister():
     del bpy.types.Mesh.e_lon
     del bpy.types.Mesh.life
 
+def _clear():
+    bpy.ops.object.editmode_toggle()
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.editmode_toggle()
+
 
 class Registrant:pass
 
 
-class poll_for_mesh:
-    @classmethod
-    def poll(self,context):
-        try:
-            assert context.active_object.type == 'MESH'
-            return True
-        except:
-            return False
-
-
-class MESH_OT_select_vertex_neighbors(Registrant,poll_for_mesh,bpy.types.Operator):
-    """Hold shift to extend instead of replace selection"""
+class MESH_OT_svv(bpy.types.Operator, Registrant):
+    '''The set of selected verts AND their vert neighbors.'''
     bl_idname = "object.svv"
-    bl_label = "Vertex Neighbors"
+    bl_label = "Neighboring Vertices"
     bl_options = {'REGISTER','UNDO'}
-    extend = bpy.props.BoolProperty()
-    
     def execute(self,context):
-        bpy.context.tool_settings.mesh_select_mode = (True,False,False)
+        bpy.context.tool_settings.mesh_select_mode=(True,False,False)
         bpy.ops.object.editmode_toggle()
-        if self.extend:
-            context.active_object.data.vsel = context.active_object.data.svv
-        else:
-            t=context.active_object.data.svv
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.editmode_toggle()
-            context.active_object.data.vsel = t
+        context.active_object.data.vsel=context.active_object.data.svv
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
-        
-    def invoke(self,context,event):
-        self.extend = event.shift
-        return self.execute(context)
 
 
-class MESH_OT_select_edge_neighbors(Registrant,poll_for_mesh,bpy.types.Operator):
-    """Hold shift to extend instead of replace selection"""
-    bl_idname = "object.see"
-    bl_label = "Edge Neighbors"
-    bl_options = {'REGISTER','UNDO'}
-    extend = bpy.props.BoolProperty()
-    
-    def execute(self,context):
-        bpy.context.tool_settings.mesh_select_mode = (False,True,False)
-        bpy.ops.object.editmode_toggle()
-        if self.extend:
-            context.active_object.data.esel = context.active_object.data.see
-        else:
-            t=context.active_object.data.see
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.editmode_toggle()
-            context.active_object.data.esel=t
-        bpy.ops.object.editmode_toggle()
-        return {'FINISHED'}
-        
-    def invoke(self,context,event):
-        self.extend = event.shift
-        return self.execute(context)
-
-
-class MESH_OT_select_face_neighbors(bpy.types.Operator, Registrant):
-    """Hold shift to extend instead of replace selection"""
-    bl_idname="object.sff"
-    bl_label="Face Neighbors"
+class MESH_OT_see(bpy.types.Operator, Registrant):
+    '''The set of selected edges AND their edge neighbors.'''
+    bl_idname="object.see"
+    bl_label="Neighboring Edges"
     bl_options={'REGISTER','UNDO'}
-    extend = bpy.props.BoolProperty()
-    
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+        bpy.ops.object.editmode_toggle()
+        context.active_object.data.esel=context.active_object.data.see
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+
+
+class MESH_OT_sff(bpy.types.Operator, Registrant):
+    '''The set of selected face AND their face neighbors*.'''
+    bl_idname="object.sff"
+    bl_label="Neighboring Faces"
+    bl_options={'REGISTER','UNDO'}
     def execute(self,context):
         bpy.context.tool_settings.mesh_select_mode=(False,False,True)
         bpy.ops.object.editmode_toggle()
-        if self.extend:
-            context.active_object.data.fsel=context.active_object.data.sff
-        else:
-            t=context.active_object.data.sff
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.editmode_toggle()
-            context.active_object.data.fsel=t
+        context.active_object.data.fsel=context.active_object.data.sff
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
-        
-    def invoke(self,context,event):
-        self.extend = event.shift
-        return self.execute(context)
 
 
-class MESH_OT_edges_lateral(bpy.types.Operator, Registrant):
-    """Hold shift to extend instead of replace selection"""
-    bl_idname="object.elats"
-    bl_label="Lateral Edge Neighbors"
+class MESH_OT_jsvv(bpy.types.Operator, Registrant):
+    '''Just the neigbors of the selected vertices.'''
+    bl_idname="object.jsvv"
+    bl_label="Only Neighboring Vertices"
     bl_options={'REGISTER','UNDO'}
-    extend = bpy.props.BoolProperty()
-    
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(True,False,False)
+        bpy.ops.object.editmode_toggle()
+        t=context.active_object.data.svv
+        _clear()
+        context.active_object.data.vsel=t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+
+
+class MESH_OT_jsee(bpy.types.Operator, Registrant):
+    '''Just the neigbors of the selected edges'''
+    bl_idname="object.jsee"
+    bl_label="Only Neighboring Edges"
+    bl_options={'REGISTER','UNDO'}
     def execute(self,context):
         bpy.context.tool_settings.mesh_select_mode=(False,True,False)
         bpy.ops.object.editmode_toggle()
-        if self.extend:
-                    context.active_object.data.esel=context.active_object.data.e_lat
-        else:
-            t=context.active_object.data.e_lat
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.editmode_toggle()
-            context.active_object.data.esel=t
+        t=context.active_object.data.see
+        _clear()
+        context.active_object.data.esel=t
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
-        
-    def invoke(self,context,event):
-        self.extend = event.shift
-        return self.execute(context)
 
 
-class MESH_OT_edges_longitudinal(bpy.types.Operator, Registrant):
-    """Hold shift to extend instead of replace selection"""
-    bl_idname="object.elons"
-    bl_label="Longitudinal Edge Neighbors"
+class MESH_OT_jsff(bpy.types.Operator, Registrant):
+    '''Just the neighbors of the selected faces*'''
+    bl_idname="object.jsff"
+    bl_label="Only Neighboring Faces"
     bl_options={'REGISTER','UNDO'}
-    extend = bpy.props.BoolProperty()
-    
     def execute(self,context):
-        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+        bpy.context.tool_settings.mesh_select_mode=(False,False,True)
         bpy.ops.object.editmode_toggle()
-        if self.extend:
-            context.active_object.data.esel=context.active_object.data.e_lon
-        else:
-            t=context.active_object.data.e_lon
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.editmode_toggle()
-            context.active_object.data.esel=t
+        t=context.active_object.data.sff
+        _clear()
+        context.active_object.data.fsel=t
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
-        
-    def invoke(self,context,event):
-        self.extend = event.shift
-        return self.execute(context)
 
 
-class MESH_OT_just_edges(bpy.types.Operator, Registrant):
-    """Deselects faces and verts, leaving only edges selected."""
-    bl_idname="object.just_edges"
+class MESH_OT_je(bpy.types.Operator, Registrant):
+    bl_idname="object.je"
     bl_label="Only the Edges"
     bl_options={'REGISTER','UNDO'}
-    
     def execute(self,context):
-        bpy.context.tool_settings.mesh_select_mode = (False,True,False)
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
         bpy.ops.object.editmode_toggle()
         t=context.active_object.data.je
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.mesh.select_all(action='DESELECT')
-        bpy.ops.object.editmode_toggle()
-        context.active_object.data.esel = t
+        _clear()
+        context.active_object.data.esel=t
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
 
-class MESH_OT_inner_edges(bpy.types.Operator, Registrant):
-    """Reduce selection to inner edges"""
-    bl_idname="object.inner_edges"
+class MESH_OT_jei(bpy.types.Operator, Registrant):
+    bl_idname="object.jei"
     bl_label="Inner Edges"
     bl_options={'REGISTER','UNDO'}
-    
     def execute(self,context):
         bpy.context.tool_settings.mesh_select_mode=(False,True,False)
         bpy.ops.object.editmode_toggle()
         t=context.active_object.data.jei
+        _clear()
+        context.active_object.data.esel=t
         bpy.ops.object.editmode_toggle()
-        bpy.ops.mesh.select_all(action='DESELECT')
+        return {'FINISHED'}
+
+
+class MESH_OT_e_lat(bpy.types.Operator, Registrant):
+    bl_idname="object.e_lat"
+    bl_label="Lateral Edge Neighbors"
+    bl_options={'REGISTER','UNDO'}
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
         bpy.ops.object.editmode_toggle()
-        context.active_object.data.esel = t
+        context.active_object.data.esel=context.active_object.data.e_lat
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+
+
+class MESH_OT_e_lon(bpy.types.Operator, Registrant):
+    bl_idname="object.e_lon"
+    bl_label="Longitudinal Edge Neighbors"
+    bl_options={'REGISTER','UNDO'}
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+        bpy.ops.object.editmode_toggle()
+        context.active_object.data.esel=context.active_object.data.e_lon
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+
+
+class MESH_OT_je_lat(bpy.types.Operator, Registrant):
+    bl_idname="object.je_lat"
+    bl_label="Only Lateral Edge Neighbors"
+    bl_options={'REGISTER','UNDO'}
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+        bpy.ops.object.editmode_toggle()
+        t=context.active_object.data.e_lat
+        _clear()
+        context.active_object.data.esel=t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+
+
+class MESH_OT_je_lon(bpy.types.Operator, Registrant):
+    bl_idname="object.je_lon"
+    bl_label="Only Longitudinal Edge Neighbors"
+    bl_options={'REGISTER','UNDO'}
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+        bpy.ops.object.editmode_toggle()
+        t=context.active_object.data.e_lon
+        _clear()
+        context.active_object.data.esel=t
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
 
 class MESH_OT_life(bpy.types.Operator, Registrant):
-    """Apply Conway's Life Algorithm to Face Selection."""
+    '''Apply life* algorithm to face selection.'''
     bl_idname="object.life"
     bl_label="Conway's Life"
     bl_options={'REGISTER','UNDO'}
-
     def execute(self,context):
-        bpy.context.tool_settings.mesh_select_mode = (False,False,True)
+        bpy.context.tool_settings.mesh_select_mode=(False,False,True)
         bpy.ops.object.editmode_toggle()
         t=context.active_object.data.life
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.mesh.select_all(action='DESELECT')
-        bpy.ops.object.editmode_toggle()
-        context.active_object.data.fsel = t
+        _clear()
+        context.active_object.data.fsel=t
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
 
-#######################
-
-def tk_draw(self,context):
-    layout = self.layout
-    layout.row().operator("object.svv")
-    layout.row().operator("object.see")
-    layout.row().operator("object.sff")
-    layout.row().operator("object.elats")
-    layout.row().operator("object.elons")
-    layout.row().separator()
-    layout.row().operator("object.just_edges")
-    layout.row().operator("object.inner_edges")
-    layout.row().separator()
-    layout.row().operator("object.life")
-
 class TopoKitMenu(bpy.types.Menu, Registrant):
     bl_idname="VIEW3D_MT_topokit_menu"
     bl_label="TopoKit"
-    draw = tk_draw
-        
-
-def TK_ui_tog(self,context):
-    if context.scene.tkui_show.in_v3d_tools:
-        bpy.types.VIEW3D_PT_tools_meshedit.append(tk_draw)
-    else:
-        bpy.types.VIEW3D_PT_tools_meshedit.remove(tk_draw)
-    return None
-        
-        
-class TK_ui_vis_prefs(bpy.types.PropertyGroup,Registrant):
-    in_v3d_tools = bpy.props.BoolProperty(description='Toggles display of buttons in the v3d tools pane',name='show ui in tools pane',update=TK_ui_tog)
-
-
-class TopoKitUI_prefs(bpy.types.Panel, Registrant):
-    bl_label = "Topokit Settings"
-    bl_space_type,bl_region_type=("VIEW_3D","UI")
     def draw(self,context):
-        self.layout.row().prop(context.scene.tkui_show, 'in_v3d_tools')
+        row = self.layout.row().split()
+        l,r = (row.column(),row.column())
+        
+        l.row().label("Select:")
+        l.row().operator("object.jsvv")
+        l.row().operator("object.jsee")
+        l.row().operator("object.jsff")
+        l.row().separator()
+        l.row().operator("object.je_lat")
+        l.row().operator("object.je_lon")
+        l.row().separator()
+        l.row().label("Reduce Edge Selection to:")
+        l.row().operator("object.je")
+        l.row().operator("object.jei")
+        
+        r.row().label( "Extend Selection with:")
+        r.row().operator("object.svv")
+        r.row().operator("object.see")
+        r.row().operator("object.sff")
+        r.row().separator()
+        r.row().operator("object.e_lat")
+        r.row().operator("object.e_lon")
+        r.row().separator()
+        r.row().label("Apply alg to Face Selection:")
+        r.row().operator("object.life")
 
 
 def topokit_menu(self,context):
@@ -591,17 +572,12 @@ def topokit_menu(self,context):
 def register():
     kit_register()
     list(map(bpy.utils.register_class, Registrant.__subclasses__()))
-    bpy.types.Scene.tkui_show = bpy.props.PointerProperty(type=TK_ui_vis_prefs)
-    
-    bpy.types.VIEW3D_PT_tools_meshedit.append(tk_draw)
     bpy.types.VIEW3D_MT_edit_mesh_specials.append(topokit_menu)
 
 def unregister():
     kit_unregister()
     list(map(bpy.utils.unregister_class,Registrant.__subclasses__()))
-    del bpy.types.Scene.tkui_show
     bpy.types.VIEW3D_MT_edit_mesh_specials.remove(topokit_menu)
-    bpy.types.VIEW3D_PT_tools_meshedit.remove(tk_draw)
 
 if __name__=="__main__":
     register()
