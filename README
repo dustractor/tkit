@@ -14,11 +14,11 @@ repo -- github.com/dustractor/tkit
 
 -----------------------------
 
-[INSTALLATION if you don't just fork it]
+[INSTALLATION]
 
 1.  If you're reading this at github, which you probably are, then click the ``Downloads`` button and choose tar.gz or zip.
 
-2.  When you decompress the file you downloaded, you'll get a folder which you should inside your addons folder.
+2.  When you decompress the file you downloaded, you'll get a folder which you should place inside your addons folder.
 
 3.  Enable ``Topokit`` in blender's User Preferences > Addons.
 
@@ -30,12 +30,16 @@ If prefer buttons, open the 3d view properties (with the N key) and look for ``t
 
 Holding [shift] while clicking any one of the ``Neighbors`` functions will extend the selection instead of replacing it.
 
-[roadmap for next week]
+[roadmap]
 
-conway's life should play with material index as well as with selection.
+conway's life should play with material index as well as with selection, and have some way to animate.  (I think that keyframing user-properties probably works now in 2.59)  I was fail in 2.58 and haven't looked into it since.
 
 modal operation -- will solve the issue I have with wanting to ``cache`` the maps in-between calls and only update when mesh data changes.
 
-face neighbors gets refactored into select faces ``sharing X`` where X is either vertices or faces.
+face neighbors probably refactored into ``select faces sharing X`` where X is either vertices or faces.
 
 optimize with foreach_getters/setters,  undo more foolish cruft, comment code.
+
+a tkit_utils panel, with macros for any of blender's ops that might relate to the business of ``topology``,  just for the sake of gathering it all in one place (even though the spacebar menu is better, its sometimes to SEE buttons.)
+
+and for the sake of being retro -- an attempt to recreate some of that pre-2.5 horizontal buttons panel goodness.  just a matter of layout, that.
