@@ -1,4 +1,5 @@
 tkit stands for topology kit.
+
 It's for making selections based on what's already selected.
 
 Per Vertex, Edge, or Face, selecting what might be termed ``Neighboring elements``
@@ -11,19 +12,30 @@ usage -- http://bpygram.us/tkit
 
 repo -- github.com/dustractor/tkit
 
-me  -- dustractor@gmail.com
-
-thanks for checkin it out!
 -----------------------------
 
 [INSTALLATION if you don't just fork it]
 
-1.  Click ``downloads`` up there^ if you're reading this at github, which you probably are.
+1.  If you're reading this at github, which you probably are, then click the ``Downloads`` button and choose tar.gz or zip.
 
-2.  Decompress the file and place the resulting folder inside your addons folder.
+2.  When you decompress the file you downloaded, you'll get a folder which you should inside your addons folder.
 
 3.  Enable ``Topokit`` in blender's User Preferences > Addons.
 
 [USAGE]
 
 Having a mesh object selected in edit mode, the W key brings up the mesh specials menu.  If the add-on enabled correctly, you should see ``Topokit`` at the bottom of that menu.
+
+If prefer buttons, open the 3d view properties (with the N key) and look for ``topokit settings``.   There's a box you can check to toggle some buttons.  They will show up in the left-side ``tools`` pane, during edit mode.
+
+Holding [shift] while clicking any one of the ``Neighbors`` functions will extend the selection instead of replacing it.
+
+[roadmap for next week]
+
+conway's life should play with material index as well as with selection.
+
+modal operation -- will solve the issue I have with wanting to ``cache`` the maps in-between calls and only update when mesh data changes.
+
+face neighbors gets refactored into select faces ``sharing X`` where X is either vertices or faces.
+
+optimize with foreach_getters/setters,  undo more foolish cruft, comment code.
