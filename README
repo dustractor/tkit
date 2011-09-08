@@ -16,9 +16,9 @@ me  -- dustractor@gmail.com
 thanks for checkin it out!
 -----------------------------
 
-[INSTALLATION if you don't just fork it]
+[INSTALLATION]
 
-1.  Click ``downloads`` up there^ if you're reading this at github, which you probably are.
+1.  If you're reading this at github, which you probably are, then click the ``Downloads`` button up there.
 
 2.  Decompress the file and place the resulting folder inside your addons folder.
 
@@ -27,3 +27,18 @@ thanks for checkin it out!
 [USAGE]
 
 Having a mesh object selected in edit mode, the W key brings up the mesh specials menu.  If the add-on enabled correctly, you should see ``Topokit`` at the bottom of that menu.
+
+If you prefer buttons instead of the specials menu, use the N key in the 3d View to show the right-side properties pane.  There is an option to put some buttons in the tools panel.  You can bring up the tools panel by pressing the T key in the 3d view.
+
+If you hold shift while clicking one of the ``neighbor`` functions, that will cause the operator to extend the selection instead of replacing it.
+For the most part, this results in simple growth ( first three of the five ``neighbor`` functions.)
+However, its actually useful on the last two ( Lateral and Longitudinal edges ) if you don't want skipping.
+
+[roadmap for the coming week]
+
+conway's life to affect and play with material index ( no it just plays with selection )
+
+face neighbors gets re-factored to faces ``sharing`` X  where X is  either vertices or edges.
+
+modal operation -- this will solve the issue i have with wanting to cache ``the maps`` and only update when the mesh changes.
+
