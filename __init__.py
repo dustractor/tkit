@@ -1,4 +1,4 @@
-# tkit v1.0 sep 4 2011 Several functions to select neighboring elements in a topology.
+# tkit v1.0 sep 8 2011 Several functions to select neighboring elements in a topology.
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
