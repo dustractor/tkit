@@ -351,7 +351,7 @@ def kit_unregister():
 class Registrant:pass
 
 
-class poll_for_mesh:
+class polls_for_mesh:
     @classmethod
     def poll(self,context):
         try:
@@ -361,7 +361,7 @@ class poll_for_mesh:
             return False
 
 
-class MESH_OT_select_vertex_neighbors(Registrant,poll_for_mesh,bpy.types.Operator):
+class MESH_OT_select_vertex_neighbors(Registrant,polls_for_mesh,bpy.types.Operator):
     """Hold shift to extend instead of replace selection"""
     bl_idname = "object.svv"
     bl_label = "Vertex Neighbors"
@@ -387,7 +387,7 @@ class MESH_OT_select_vertex_neighbors(Registrant,poll_for_mesh,bpy.types.Operato
         return self.execute(context)
 
 
-class MESH_OT_select_edge_neighbors(Registrant,poll_for_mesh,bpy.types.Operator):
+class MESH_OT_select_edge_neighbors(Registrant,polls_for_mesh,bpy.types.Operator):
     """Hold shift to extend instead of replace selection"""
     bl_idname = "object.see"
     bl_label = "Edge Neighbors"
@@ -413,7 +413,7 @@ class MESH_OT_select_edge_neighbors(Registrant,poll_for_mesh,bpy.types.Operator)
         return self.execute(context)
 
 
-class MESH_OT_select_face_neighbors(bpy.types.Operator, Registrant):
+class MESH_OT_select_face_neighbors(Registrant,polls_for_mesh,bpy.types.Operator):
     """Hold shift to extend instead of replace selection"""
     bl_idname="object.sff"
     bl_label="Face Neighbors"
@@ -439,7 +439,7 @@ class MESH_OT_select_face_neighbors(bpy.types.Operator, Registrant):
         return self.execute(context)
 
 
-class MESH_OT_edges_lateral(bpy.types.Operator, Registrant):
+class MESH_OT_edges_lateral(Registrant,polls_for_mesh,bpy.types.Operator):
     """Hold shift to extend instead of replace selection"""
     bl_idname="object.elats"
     bl_label="Lateral Edge Neighbors"
@@ -465,7 +465,7 @@ class MESH_OT_edges_lateral(bpy.types.Operator, Registrant):
         return self.execute(context)
 
 
-class MESH_OT_edges_longitudinal(bpy.types.Operator, Registrant):
+class MESH_OT_edges_longitudinal(Registrant,polls_for_mesh,bpy.types.Operator):
     """Hold shift to extend instead of replace selection"""
     bl_idname="object.elons"
     bl_label="Longitudinal Edge Neighbors"
@@ -491,7 +491,7 @@ class MESH_OT_edges_longitudinal(bpy.types.Operator, Registrant):
         return self.execute(context)
 
 
-class MESH_OT_just_edges(bpy.types.Operator, Registrant):
+class MESH_OT_just_edges(Registrant,polls_for_mesh,bpy.types.Operator):
     """Deselects faces and verts, leaving only edges selected."""
     bl_idname="object.just_edges"
     bl_label="Only the Edges"
@@ -509,7 +509,7 @@ class MESH_OT_just_edges(bpy.types.Operator, Registrant):
         return {'FINISHED'}
 
 
-class MESH_OT_inner_edges(bpy.types.Operator, Registrant):
+class MESH_OT_inner_edges(Registrant,polls_for_mesh,bpy.types.Operator):
     """Reduce selection to inner edges"""
     bl_idname="object.inner_edges"
     bl_label="Inner Edges"
@@ -527,7 +527,7 @@ class MESH_OT_inner_edges(bpy.types.Operator, Registrant):
         return {'FINISHED'}
 
 
-class MESH_OT_life(bpy.types.Operator, Registrant):
+class MESH_OT_life(Registrant,polls_for_mesh,bpy.types.Operator):
     """Apply Conway's Life Algorithm to Face Selection."""
     bl_idname="object.life"
     bl_label="Conway's Life"
@@ -544,8 +544,6 @@ class MESH_OT_life(bpy.types.Operator, Registrant):
         bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
-
-#######################
 
 def tk_draw(self,context):
     layout = self.layout
