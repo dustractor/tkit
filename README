@@ -8,9 +8,12 @@ Also two other functions that reduce edge selection to either ``inner`` edges or
 
 Plus one Conway's Life Algorithm that works in face selection mode.
 
-usage -- http://bpygram.us/tkit
+
+
+usage -- http://vimeo.com/bpygram/tkit
 
 repo -- github.com/dustractor/tkit
+
 
 -----------------------------
 
