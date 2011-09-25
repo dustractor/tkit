@@ -1,4 +1,4 @@
-# tkit v1.4 sep 25 2011
+# tkit v1.0 sep 8 2011 Several functions to select neighboring elements in a topology.
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
@@ -18,422 +18,588 @@
 # ##### END GPL LICENSE BLOCK #####
 
 bl_info = {
-    "name" : "tkit",
+    "name" : "Topokit",
     "author" : "Shams Kitz / dustractor@gmail.com",
     "version" : (1, 0),
     "blender" : (2, 5, 9),
     "api" : 39355,
-    "location" : "View3d > tkit",
+    "location" : "View3d > Edit Mesh Specials (W key) > topokit",
     "description" : "Variouf wayf to felect neighboring elementf.",
     "warning" : "",
     "wiki_url" : "",
     "tracker_url" : "github.com/dustractor/tkit",
     "category" : "Mesh"
 }
-
 import bpy
 
-from array import array
-from math import trunc
-from random import random
 
-m = 'heavy'
-tk = None
-inames = []
+def true(x):
+    x.select = True
 
-def meshsize(data):
-    return list(map(len,[data.vertices,data.edges,data.faces]))
+@property
+def eki(mesh):
+    return {e.key:e.index for e in mesh.edges}
+
+@eki.setter
+def eki(mesh,x):
+    raise AttributeError
+
+@property
+def vsel(mesh):
+    return {v.index for v in mesh.vertices if v.select}
+
+@vsel.setter
+def vsel(mesh,L):
+    list(map(true,map(lambda i:mesh.vertices[i],L)))
+
+@property
+def esel(mesh):
+    return {e.index for e in mesh.edges if e.select}
+
+@esel.setter
+def esel(mesh,L):
+    list(map(true,map(lambda i:mesh.edges[i],L)))
+
+@property
+def fsel(mesh):
+    return {f.index for f in mesh.faces if f.select}
+
+@fsel.setter
+def fsel(mesh,L):
+    list(map(true,map(lambda i:mesh.faces[i],L)))
+
+@property
+def vv(mesh):
+    d = {i:set() for i in range(len(mesh.vertices))}
+    for v1,v2 in mesh.edge_keys:
+        d[v1].add(v2)
+        d[v2].add(v1)
+    return d
+
+@vv.setter
+def vv(mesh,L):
+    raise AttributeError
+
+@property
+def ve(mesh):
+    d = {i:set() for i in range(len(mesh.vertices))}
+    for e in mesh.edges:
+        for v in e.vertices:
+            d[v].add(e.index)
+    return d
+
+@ve.setter
+def ve(mesh,L):
+    raise AttributeError
+
+@property
+def vf(mesh):
+    d={i:set() for i in range(len(mesh.vertices))}
+    for f in mesh.faces:
+        for v in f.vertices:
+            d[v].add(f.index)
+    return d
+
+@vf.setter
+def vf(mesh,L):
+    raise AttributeError
+
+@property
+def ee(mesh):
+    eki = mesh.eki
+    d={i:set() for i in range(len(mesh.edges))}
+    for f in mesh.faces:
+        ed=[eki[ek] for ek in f.edge_keys]
+        for k in f.edge_keys:
+            d[eki[k]].update(ed)
+    return d
+
+@ee.setter
+def ee(mesh,L):
+    raise AttributeError
+
+@property
+def ef(mesh):
+    eki = mesh.eki
+    d = {i:set() for i in range(len(mesh.edges))}
+    for f in mesh.faces:
+        for k in f.edge_keys:
+            d[eki[k]].add(f.index)
+    return d
+
+@ef.setter
+def ef(mesh,L):
+    raise AttributeError
+
+@property
+def ff(mesh):
+    eki=mesh.eki
+    ef=mesh.ef
+    d={i:set() for i in range(len(mesh.faces))}
+    for f in mesh.faces:
+        for ek in f.edge_keys:
+            d[f.index].update(ef[eki[ek]])
+    return d
+
+@ff.setter
+def ff(mesh,L):
+    raise AttributeError
+
+@property
+def svv(mesh):
+    n=set()
+    s=mesh.vsel
+    m=mesh.vv
+    d=filter(lambda x:x in s,m)
+    for v in d:
+        n.update(m[v])
+    return n-s
+@svv.setter
+def svv(mesh,L):
+    raise AttributeError
+
+@property
+def see(mesh):
+    n=set()
+    s=mesh.esel
+    m=mesh.ee
+    d=filter(lambda x:x in s,m)
+    for e in d:
+        n.update(m[e])
+    return n-s
+@see.setter
+def see(mesh,L):
+    raise AttributeError
+
+@property
+def sff(mesh):
+    n=set()
+    s=mesh.fsel
+    m=mesh.ff
+    d=filter(lambda x:x in s,m)
+    for f in d:
+        n.update(m[f])
+    return n-s
+@sff.setter
+def sff(mesh,L):
+    raise AttributeError
+
+@property
+def je(mesh):
+    eki=mesh.eki
+    fs=mesh.fsel
+    es={i:0 for i in mesh.esel}
+    for f in fs:
+        for k in mesh.faces[f].edge_keys:
+            es[eki[k]]+=1
+    return list(filter(lambda x:es[x]<1,es))
+@je.setter
+def je(mesh,L):
+    raise AttributeError
+
+@property
+def jei(mesh):
+    es=mesh.esel
+    a={i:False for i in es}
+    z=set()
+    ef=mesh.ef
+    for e in es:
+        for f in ef[e]:
+            if mesh.faces[f].select:
+                if not a[e]:
+                    a[e]=True
+                else:
+                    z.add(e)
+    for e in a:
+        if a[e]:
+            es.remove(e)
+    es.update(z)
+    return es
+@jei.setter
+def jei(mesh,L):
+    raise AttributeError
+
+@property
+def e_lat(mesh):
+    ts=set()
+    eki=mesh.eki
+    es=mesh.esel
+    ef=mesh.ef
+    for e in es:
+        for f in ef[e]:
+            for k in mesh.faces[f].edge_keys:
+                vin=False
+                for v in mesh.edges[e].key:
+                    if v in k:
+                        vin = True
+                if vin:
+                    continue
+                else:
+                    ts.add(eki[k])
+    if ts.issubset(es):
+        return []
+    return ts-es
+@e_lat.setter
+def e_lat(mesh,L):
+    raise AttributeError
+
+@property
+def e_lon(mesh):
+    ts=set()
+    ef=mesh.ef
+    vv=mesh.vv
+    ve=mesh.ve
+    es=mesh.esel
+    pts={}
+    for v in mesh.vsel:
+        pts[v]=False
+    impfs=set()
+    for e in es:
+        for v in mesh.edges[e].key:
+            pts[v] = not pts[v]
+        for f in ef[e]:
+            impfs.add(f)
+    evs=[pt for pt in pts if pts[pt] == True]
+    implicated_face_verts=set()
+    epneighbors=set()
+    for f in impfs:
+        for v in mesh.faces[f].vertices:
+            implicated_face_verts.add(v)
+    for v in evs:
+        for vn in vv[v]:
+            epneighbors.add(vn)
+    them=epneighbors.difference(implicated_face_verts)
+    for v in them:
+        for e in ve[v]:
+            for vi in mesh.edges[e].key:
+                if vi in evs:
+                    ts.add(e)
+    if ts.issubset(es):
+        return []
+    return ts-es
+@e_lon.setter
+def e_lon(mesh,L):
+    raise AttributeError
+
+@property
+def life(mesh):
+    ts=set()
+    tx=set()
+    vf=mesh.vf
+    fs=mesh.fsel
+    r=len(mesh.faces)
+    d={i:set() for i in range(r)}
+    for f in mesh.faces:
+        for v in f.vertices:
+            for n in vf[v]-{f.index}:
+                if mesh.faces[n].select:
+                    d[f.index].add(n)
+    for i in d:
+        L=len(d[i])
+        if L ==3:
+            ts.add(i)
+        elif L !=2:
+            tx.add(i)
+    fs.update(ts)
+    return fs-tx
+@life.setter
+def life(mesh,L):
+    print(42)
+    raise AttributeError
+
+def kit_register():
+    bpy.types.Mesh.eki=eki
+    bpy.types.Mesh.vsel=vsel
+    bpy.types.Mesh.esel=esel
+    bpy.types.Mesh.fsel=fsel
+    bpy.types.Mesh.vv=vv
+    bpy.types.Mesh.ve=ve
+    bpy.types.Mesh.vf=vf
+    bpy.types.Mesh.ee=ee
+    bpy.types.Mesh.ef=ef
+    bpy.types.Mesh.ff=ff
+    bpy.types.Mesh.svv=svv
+    bpy.types.Mesh.see=see
+    bpy.types.Mesh.sff=sff
+    bpy.types.Mesh.je=je
+    bpy.types.Mesh.jei=jei
+    bpy.types.Mesh.e_lat=e_lat
+    bpy.types.Mesh.e_lon=e_lon
+    bpy.types.Mesh.life=life
+
+def kit_unregister():
+    del bpy.types.Mesh.eki
+    del bpy.types.Mesh.vsel
+    del bpy.types.Mesh.esel
+    del bpy.types.Mesh.fsel
+    del bpy.types.Mesh.vv
+    del bpy.types.Mesh.ve
+    del bpy.types.Mesh.vf
+    del bpy.types.Mesh.ee
+    del bpy.types.Mesh.ef
+    del bpy.types.Mesh.ff
+    del bpy.types.Mesh.svv
+    del bpy.types.Mesh.see
+    del bpy.types.Mesh.sff
+    del bpy.types.Mesh.je
+    del bpy.types.Mesh.jei
+    del bpy.types.Mesh.e_lat
+    del bpy.types.Mesh.e_lon
+    del bpy.types.Mesh.life
 
 
-class TK:
-    this_tk = bpy.props.IntVectorProperty()
-    def __init__(self,context):
-        me = context.object.data
-        self.name = me.name
-        self.vcount,self.ecount,self.fcount = meshsize(me)
-        self.this_tk = (self.vcount,self.ecount,self.fcount)
-        self.eki = {}
-        self.eik = array('I',[0]*self.ecount*2)
-        for e in me.edges:
-            self.eki[e.key] = e.index
-            self.eik[e.index],self.eik[e.index+self.ecount] = e.vertices[0],e.vertices[1]
-        self.vstate,self.estate,self.fstate = (bytearray([0]*self.vcount),bytearray([0]*self.ecount),bytearray([0]*self.fcount))
-        self.vxmask,self.exmask,self.fxmask = (bytearray([0]*self.vcount),bytearray([0]*self.ecount),bytearray([0]*self.fcount))
-        self.vv = {i:set() for i in range(self.vcount)}
-        for v1,v2 in me.edge_keys:
-            self.vv[v1].add(v2)
-            self.vv[v2].add(v1)
-        self.ve = {i:set() for i in range(self.vcount)}
-        for e in me.edges:
-            for v in e.vertices:
-                self.ve[v].add(e.index)
-        self.vf = {i:set() for i in range(self.vcount)}
-        for f in me.faces:
-            for v in f.vertices:
-                self.vf[v].add(f.index)
-        self.ee = {i:set() for i in range(self.ecount)}
-        for f in me.faces:
-            ed=[self.eki[ek] for ek in f.edge_keys]
-            for k in f.edge_keys:
-                self.ee[self.eki[k]].update(ed)
-        self.ef = {i:set() for i in range(self.ecount)}
-        for f in me.faces:
-            for k in f.edge_keys:
-                self.ef[self.eki[k]].add(f.index)
-        self.ff = {i:set() for i in range(self.fcount)}
-        for f in me.faces:
-            for ek in f.edge_keys:
-                self.ff[f.index].update(self.ef[self.eki[ek]])
-
-    def get_state(self,v=False,e=False,f=False):
-        if v:
-            bpy.data.meshes[self.name].vertices.foreach_get("select",self.vstate)
-        if e:
-            bpy.data.meshes[self.name].edges.foreach_get("select",self.estate)
-        if f:        
-            bpy.data.meshes[self.name].faces.foreach_get("select",self.fstate)
-    def put_state(self,v=False,e=False,f=False):
-        if v:
-            bpy.data.meshes[self.name].vertices.foreach_set("select",self.vstate)
-        elif e:
-            bpy.data.meshes[self.name].edges.foreach_set("select",self.estate)
-        elif f: 
-            bpy.data.meshes[self.name].faces.foreach_set("select",self.fstate)
-
-    def put_mask(self,v=False,e=False,f=False):
-        if v:
-            bpy.data.meshes[self.name].vertices.foreach_set("select",self.vxmask)
-        elif e:
-            bpy.data.meshes[self.name].edges.foreach_set("select",self.exmask)
-        elif f: 
-            bpy.data.meshes[self.name].faces.foreach_set("select",self.fxmask)
-
-    def mask_state(self,v=False,e=False,f=False):
-        if v:
-            for i in range(self.vcount):
-                self.vstate[i] ^= self.vxmask[i]
-        if e:
-            for i in range(self.ecount):
-                self.estate[i] ^= self.exmask[i]
-        if f: 
-            for i in range(self.fcount):
-                self.fstate[i] ^= self.fxmask[i]
-
-    def reset_mask(self,v=False,e=False,f=False):
-        if v:
-            self.vxmask = bytearray([0]*self.vcount)
-        if e:
-            self.exmask = bytearray([0]*self.ecount)
-        if f:
-            self.fxmask = bytearray([0]*self.fcount)
-
-    def svv(self):
-        if not bpy.context.tool_settings.mesh_select_mode[0]:
-            bpy.context.tool_settings.mesh_select_mode = (True,False,False)
-        else:
-            self.get_state(v=True)
-            self.reset_mask(v=True)
-            for i in range(self.vcount):
-                if self.vstate[i]:
-                    for j in self.vv[i]:
-                        self.vxmask[j] = 1
-            self.mask_state(v=True)
-            self.put_state(v=True)
-        
-    def see(self):
-        if not bpy.context.tool_settings.mesh_select_mode[1]:
-            bpy.context.tool_settings.mesh_select_mode = (False,True,False)
-        else:
-            self.get_state(e=True)
-            self.reset_mask(e=True)
-            for i in range(self.ecount):
-                if self.estate[i]:
-                    hey = {self.eik[i],self.eik[i+self.ecount]}
-                    for j in self.ee[i]:
-                        lit = {self.eik[j],self.eik[j+self.ecount]}
-                        if not hey.isdisjoint(lit):
-                            self.exmask[j] = 1
-            self.mask_state(e=True)
-            self.put_state(e=True)
-        
-    def sff(self):
-        if not bpy.context.tool_settings.mesh_select_mode[2]:
-            bpy.context.tool_settings.mesh_select_mode = (False,False,True)
-        else:
-            self.get_state(f=True)
-            self.reset_mask(f=True)
-            for i in range(self.fcount):
-                if self.fstate[i]:
-                    for j in self.ff[i]:
-                        self.fxmask[j] = 1
-            self.mask_state(f=True)
-            self.put_state(f=True)
-        
-    def je(self):
-        self.get_state(f=True)
-        self.get_state(e=True)
-        self.reset_mask(e=True)
-        for i in range(self.fcount):
-            if self.fstate[i]:
-                for k in bpy.data.meshes[self.name].faces[i].edge_keys:
-                    self.exmask[self.eki[k]] = 1
-        self.mask_state(e=True)
-        self.put_state(e=True)
-        
-    def ie(self):
-        te = {}
-        self.get_state(e=True)
-        self.reset_mask(e=True)
-        self.get_state(f=True)
-        for i in filter(lambda n: self.estate[n],range(self.ecount)):
-            for j in self.ef[i]:
-                if self.fstate[j]:
-                    if not self.exmask[i]:
-                        self.exmask[i] = 1
-                    else:
-                        self.estate[i] = 0        
-        self.mask_state(e=True)
-        self.put_state(e=True)
-        
-    def e_lat(self):
-        self.get_state(e=True)
-        orig = list(filter(lambda n:self.estate[n], range(self.ecount)))
-        self.reset_mask(e=True)
-        for e in filter(lambda n: self.estate[n],range(self.ecount)):
-            for f in self.ef[e]:
-                for k in bpy.data.meshes[self.name].faces[f].edge_keys:
-                    vin = False
-                    for v in bpy.data.meshes[self.name].edges[e].key:
-                        if v in k:
-                            vin = True
-                    if vin:
-                        continue
-                    else:
-                        self.exmask[self.eki[k]] = 1
-        self.mask_state(e=True)
-        for e in orig:
-            self.estate[e] = 1
-        self.put_state(e=True)
-
-    def e_lon(self):
-        self.get_state(v=True,e=True,f=True)
-        self.reset_mask(v=True,e=True,f=True)
-        for e in filter(lambda n: self.estate[n],range(self.ecount)):
-            for v in bpy.data.meshes[self.name].edges[e].key:
-                self.vxmask[v] ^= 1
-            for f in self.ef[e]:
-                for v in bpy.data.meshes[self.name].faces[f].vertices_raw:
-                    self.vstate[v] = 1
-        for v in list(filter(lambda n: self.vxmask[n],range(self.vcount))):
-            for vn in self.vv[v]:
-                if not self.vstate[vn] and (vn != v):
-                    self.estate[self.eki[(min(v,vn),max(v,vn))]] = 1
-        self.put_state(e=True)
-
-    def life(self):
-        self.get_state(f=True)
-        F = {}
-        s = set()
-        x = set()
-        for f in range(self.fcount):
-            F[f] = set()
-            for v in bpy.data.meshes[self.name].faces[f].vertices_raw:
-                for fn in filter(lambda n: self.fstate[n] and f != n,self.vf[v]):
-                    F[f].add(fn)
-        for f in F:
-            if len(F[f]) == 3:
-                s.add(f)
-            elif len(F[f]) != 2:
-                x.add(f)
-        for f in range(self.fcount):
-            if f in s:
-                self.fstate[f] = 1
-            if f in x:
-                self.fstate[f] = 0
-        self.put_state(f=True)
-
-    def rand(self):
-        v,e,f = bpy.context.tool_settings.mesh_select_mode
-        x,n = {
-            (True,False,False):(self.vstate,self.vcount),
-            (False,True,False):(self.estate,self.ecount),
-            (False,False,True):(self.fstate,self.fcount)
-        }[(v,e,f)]
-        for i in range(n):
-            x[i] = trunc(0.499+random())
-        if v:
-            self.put_state(v=True)
-        if e:
-            self.put_state(e=True)
-        if f:
-            self.put_state(f=True)
+class Registrant:pass
 
 
-    def __repr__(self):
-        kz = list(self.__dict__.keys())
-        kz.sort()
-        return "\n".join(["%s:%s"%(a,self.__dict__[a]) for a in kz]) 
-        
-
-class R:pass
-
-
-class op:
-    def execute(self,context):
-        self.f(context)
-        return {'FINISHED'}
-
-
-class tk_op:
+class polls_for_mesh:
     @classmethod
     def poll(self,context):
-        global tk
-        if tk is not None:
-            a,b,c = meshsize(context.object.data)
-            d,e,f = tk.this_tk
-            return (a == d) and (b == e) and (c == f)
-    def execute(self,context):
-        global tk
-        bpy.ops.object.mode_set(mode='OBJECT')
         try:
-            self.f(context,tk)
-        except RuntimeError:
-            print('heavy error.  attempting rebuild of internal maps.  (mesh size must have changed.)')
-            tk.__init__(context)
-            self.f(context,tk)
-        bpy.ops.object.mode_set(mode='EDIT')
+            assert context.active_object.type == 'MESH'
+            return True
+        except:
+            return False
+
+
+class MESH_OT_select_vertex_neighbors(Registrant,polls_for_mesh,bpy.types.Operator):
+    """Hold shift to extend instead of replace selection"""
+    bl_idname = "object.svv"
+    bl_label = "Vertex Neighbors"
+    bl_options = {'REGISTER','UNDO'}
+    extend = bpy.props.BoolProperty()
+    
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode = (True,False,False)
+        bpy.ops.object.editmode_toggle()
+        if self.extend:
+            context.active_object.data.vsel = context.active_object.data.svv
+        else:
+            t=context.active_object.data.svv
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.object.editmode_toggle()
+            context.active_object.data.vsel = t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+        
+    def invoke(self,context,event):
+        self.extend = event.shift
+        return self.execute(context)
+
+
+class MESH_OT_select_edge_neighbors(Registrant,polls_for_mesh,bpy.types.Operator):
+    """Hold shift to extend instead of replace selection"""
+    bl_idname = "object.see"
+    bl_label = "Edge Neighbors"
+    bl_options = {'REGISTER','UNDO'}
+    extend = bpy.props.BoolProperty()
+    
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode = (False,True,False)
+        bpy.ops.object.editmode_toggle()
+        if self.extend:
+            context.active_object.data.esel = context.active_object.data.see
+        else:
+            t=context.active_object.data.see
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.object.editmode_toggle()
+            context.active_object.data.esel=t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+        
+    def invoke(self,context,event):
+        self.extend = event.shift
+        return self.execute(context)
+
+
+class MESH_OT_select_face_neighbors(Registrant,polls_for_mesh,bpy.types.Operator):
+    """Hold shift to extend instead of replace selection"""
+    bl_idname="object.sff"
+    bl_label="Face Neighbors"
+    bl_options={'REGISTER','UNDO'}
+    extend = bpy.props.BoolProperty()
+    
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,False,True)
+        bpy.ops.object.editmode_toggle()
+        if self.extend:
+            context.active_object.data.fsel=context.active_object.data.sff
+        else:
+            t=context.active_object.data.sff
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.object.editmode_toggle()
+            context.active_object.data.fsel=t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+        
+    def invoke(self,context,event):
+        self.extend = event.shift
+        return self.execute(context)
+
+
+class MESH_OT_edges_lateral(Registrant,polls_for_mesh,bpy.types.Operator):
+    """Hold shift to extend instead of replace selection"""
+    bl_idname="object.elats"
+    bl_label="Lateral Edge Neighbors"
+    bl_options={'REGISTER','UNDO'}
+    extend = bpy.props.BoolProperty()
+    
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+        bpy.ops.object.editmode_toggle()
+        if self.extend:
+                    context.active_object.data.esel=context.active_object.data.e_lat
+        else:
+            t=context.active_object.data.e_lat
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.object.editmode_toggle()
+            context.active_object.data.esel=t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+        
+    def invoke(self,context,event):
+        self.extend = event.shift
+        return self.execute(context)
+
+
+class MESH_OT_edges_longitudinal(Registrant,polls_for_mesh,bpy.types.Operator):
+    """Hold shift to extend instead of replace selection"""
+    bl_idname="object.elons"
+    bl_label="Longitudinal Edge Neighbors"
+    bl_options={'REGISTER','UNDO'}
+    extend = bpy.props.BoolProperty()
+    
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+        bpy.ops.object.editmode_toggle()
+        if self.extend:
+            context.active_object.data.esel=context.active_object.data.e_lon
+        else:
+            t=context.active_object.data.e_lon
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.object.editmode_toggle()
+            context.active_object.data.esel=t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+        
+    def invoke(self,context,event):
+        self.extend = event.shift
+        return self.execute(context)
+
+
+class MESH_OT_just_edges(Registrant,polls_for_mesh,bpy.types.Operator):
+    """Deselects faces and verts, leaving only edges selected."""
+    bl_idname="object.just_edges"
+    bl_label="Only the Edges"
+    bl_options={'REGISTER','UNDO'}
+    
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode = (False,True,False)
+        bpy.ops.object.editmode_toggle()
+        t=context.active_object.data.je
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.editmode_toggle()
+        context.active_object.data.esel = t
+        bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
 
-def OT(f):
-    global inames
-    label = {1:f.__doc__,0:f.__name__.replace("_"," ").title()}[f.__doc__ is not None]
-    rname = "_".join([m.upper(),"OT",f.__name__])
-    iname = ".".join([m,f.__name__])
-    inames.append(iname)
-    return type( rname, (op,bpy.types.Operator,R), { 'bl_idname':iname, 'bl_label':label, 'f':f })
-
-def TK_OT(f):
-    global inames
-    label = {1:f.__doc__,0:f.__name__.replace("_"," ").title()}[f.__doc__ is not None]
-    rname = "_".join([m.upper(),"OT",f.__name__])
-    iname = ".".join([m,f.__name__])
-    inames.append(iname)
-    return type( rname, (tk_op,bpy.types.Operator,R), { 'bl_idname':iname, 'bl_label':label, 'f':f })
-
- 
-@OT
-def build_maps(self,context):
-    global tk
-    tk = TK(context)
-    bpy.ops.object.mode_set(mode="EDIT")
-
-@TK_OT
-def print_debug(self,context,_tk):
-    print(_tk)
-
-@TK_OT
-def svv(self,context,_tk):
-    _tk.svv()
-
-@TK_OT
-def see(self,context,_tk):
-    _tk.see()
-
-@TK_OT
-def sff(self,context,_tk):
-    _tk.sff()
-
-@TK_OT
-def je(self,context,_tk):
-    _tk.je()
-
-@TK_OT
-def ie(self,context,_tk):
-    _tk.ie()
-
-@TK_OT
-def e_lat(self,context,_tk):
-    _tk.e_lat()
-
-@TK_OT
-def e_lon(self,context,_tk):
-    _tk.e_lon()
-
-@TK_OT
-def conway(self,context,_tk):
-    _tk.life()
-
-@TK_OT
-def rand(self,context,_tk):
-    _tk.rand()
-
-def heavy_draw(self,context):
-    list(map(self.layout.operator,inames))
-
-class HEAVY_PT_heavypanel(bpy.types.Panel,R):
-    bl_label = "Heavy"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "object"
-    draw = heavy_draw
-
-class HEAVY_OT_tapu(bpy.types.Operator,R):
-    bl_idname = "heavy.tapu"
-    bl_label = "tapu"
-    evtdict ={
-        "R": bpy.ops.heavy.rand,
-        "V": bpy.ops.heavy.svv,
-        "E": bpy.ops.heavy.see,
-        "F": bpy.ops.heavy.sff,
-        "J": bpy.ops.heavy.je,
-        "I": bpy.ops.heavy.ie,
-        "L": bpy.ops.heavy.e_lat,
-        "K": bpy.ops.heavy.e_lon,
-        "C": bpy.ops.heavy.life}
+class MESH_OT_inner_edges(Registrant,polls_for_mesh,bpy.types.Operator):
+    """Reduce selection to inner edges"""
+    bl_idname="object.inner_edges"
+    bl_label="Inner Edges"
+    bl_options={'REGISTER','UNDO'}
     
-    @classmethod
-    def poll(self,context):
-        return context.active_object != None
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+        bpy.ops.object.editmode_toggle()
+        t=context.active_object.data.jei
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.editmode_toggle()
+        context.active_object.data.esel = t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+
+
+class MESH_OT_life(Registrant,polls_for_mesh,bpy.types.Operator):
+    """Apply Conway's Life Algorithm to Face Selection."""
+    bl_idname="object.life"
+    bl_label="Conway's Life"
+    bl_options={'REGISTER','UNDO'}
+
+    def execute(self,context):
+        bpy.context.tool_settings.mesh_select_mode = (False,False,True)
+        bpy.ops.object.editmode_toggle()
+        t=context.active_object.data.life
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.editmode_toggle()
+        context.active_object.data.fsel = t
+        bpy.ops.object.editmode_toggle()
+        return {'FINISHED'}
+
+
+def tk_draw(self,context):
+    layout = self.layout
+    layout.row().operator("object.svv")
+    layout.row().operator("object.see")
+    layout.row().operator("object.sff")
+    layout.row().operator("object.elats")
+    layout.row().operator("object.elons")
+    layout.row().separator()
+    layout.row().operator("object.just_edges")
+    layout.row().operator("object.inner_edges")
+    layout.row().separator()
+    layout.row().operator("object.life")
+
+class TopoKitMenu(bpy.types.Menu, Registrant):
+    bl_idname="VIEW3D_MT_topokit_menu"
+    bl_label="TopoKit"
+    draw = tk_draw
         
-    def modal(self,context,event):
-        wrongval = event.value not in {'PRESS'}
-        mouse = event.type.endswith('MOUSE')
-        na = event.type not in self.evtdict.keys()    
-        if event.type in {'Q','ESC'}:
-            return {'FINISHED'}
-        elif wrongval|mouse|na:
-            return {'PASS_THROUGH'}
-        else:
-            global tk
-            bpy.ops.object.mode_set(mode='OBJECT')
-            opx = self.evtdict.get(event.type,lambda:None)
-            try:
-                opx()
-            except RuntimeError:
-                tk.__init__(context)
-                opx()
-            bpy.ops.object.mode_set(mode='EDIT')
-            return {'RUNNING_MODAL'}
 
-    def invoke(self,context,event):
-        global tk
-        if tk is None:
-            bpy.ops.object.mode_set(mode='OBJECT')
-            tk = TK(context)
-            bpy.ops.object.mode_set(mode='EDIT')
-            
-        context.window_manager.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
+def TK_ui_tog(self,context):
+    if context.scene.tkui_show.in_v3d_tools:
+        bpy.types.VIEW3D_PT_tools_meshedit.append(tk_draw)
+    else:
+        bpy.types.VIEW3D_PT_tools_meshedit.remove(tk_draw)
+    return None
+        
+        
+class TK_ui_vis_prefs(bpy.types.PropertyGroup,Registrant):
+    in_v3d_tools = bpy.props.BoolProperty(description='Toggles display of buttons in the v3d tools pane',name='show ui in tools pane',update=TK_ui_tog)
 
+
+class TopoKitUI_prefs(bpy.types.Panel, Registrant):
+    bl_label = "Topokit Settings"
+    bl_space_type,bl_region_type=("VIEW_3D","UI")
+    def draw(self,context):
+        self.layout.row().prop(context.scene.tkui_show, 'in_v3d_tools')
+
+
+def topokit_menu(self,context):
+    self.layout.menu("VIEW3D_MT_topokit_menu")
 
 def register():
-    list(map(bpy.utils.register_class,R.__subclasses__()))
-    bpy.data.window_managers['WinMan'].keyconfigs['Blender'].keymaps['Mesh'].keymap_items.new(type='T',alt=True,idname='heavy.tapu',value='PRESS')
+    kit_register()
+    list(map(bpy.utils.register_class, Registrant.__subclasses__()))
+    bpy.types.Scene.tkui_show = bpy.props.PointerProperty(type=TK_ui_vis_prefs)
+    
+    bpy.types.VIEW3D_PT_tools_meshedit.append(tk_draw)
+    bpy.types.VIEW3D_MT_edit_mesh_specials.append(topokit_menu)
 
 def unregister():
-    list(map(bpy.utils.unregister_class,R.__subclasses__()))
+    kit_unregister()
+    list(map(bpy.utils.unregister_class,Registrant.__subclasses__()))
+    del bpy.types.Scene.tkui_show
+    bpy.types.VIEW3D_MT_edit_mesh_specials.remove(topokit_menu)
+    bpy.types.VIEW3D_PT_tools_meshedit.remove(tk_draw)
 
-if __name__ == "__main__":
+if __name__=="__main__":
     register()
-
