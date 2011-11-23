@@ -30,8 +30,13 @@ bl_info = {
 # ##### END GPL LICENSE BLOCK #####
 
 import bpy
+# In between calls, this stores any data that is expensive or static,
+# matched to the size of the mesh and the id of the operator that created it
 cachedata = dict()
+# and the object keeps the key to the cachedata
 bpy.types.Object.tkkey = bpy.props.IntVectorProperty(size=4)
+
+# just a mix-in for the operators...
 class meshpoller:
     @classmethod
     def poll(self,context):
@@ -42,22 +47,17 @@ class meshpoller:
         finally:
             return True
 
-def map_verts_to_edges(meshdata):
-    x = {i:{} for i in range(len(meshdata.vertices))}
-    for a,b in meshdata.edge_keys:
-        x[a][b] = 1
-        x[b][a] = 1
-    return x
+#BEGIN VERTICES SECTION
 
-class meshpoller:
-    @classmethod
-    def poll(self,context):
-        try:
-            assert context.active_object.type == "MESH"
-        except:
-            return False
-        finally:
-            return True
+# This one works similarly to normal 'grow' (ctrl + NUMPAD_PLUS),
+# except the original selection is not part of the result,
+#
+#   0--0--0         0--1--0
+#   |  |  |         |  |  |
+#   0--1--0  -->    1--0--1
+#   |  |  |         |  |  |
+#   0--0--0         0--1--0
+#
 class MESH_OT_vneighbors_edgewise(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.v2v_by_edge"
     bl_label = "Neighbors by Edge"
@@ -71,9 +71,12 @@ class MESH_OT_vneighbors_edgewise(meshpoller,bpy.types.Operator):
         meshkey = (len(mesh.vertices),len(mesh.edges),len(mesh.faces),id(self))
         next_state = bytearray(meshkey[0])
         if (meshkey == obj.tkkey) and (meshkey in cachedata):
-            vevmap,prev_state = cachedata[meshkey]
+            vert_to_vert_map,prev_state = cachedata[meshkey]
         else:
-            vevmap = map_verts_to_edges(mesh)
+            vert_to_vert_map = {i:{} for i in range(meshkey[0])}
+            for a,b in mesh.edge_keys:
+                vert_to_vert_map[a][b] = 1
+                vert_to_vert_map[b][a] = 1
             obj.tkkey = meshkey
             prev_state = None
         if not prev_state:
@@ -81,14 +84,23 @@ class MESH_OT_vneighbors_edgewise(meshpoller,bpy.types.Operator):
         else:
             selected_vert_indices = filter(lambda _:mesh.vertices[_].select and not prev_state[_],range(len(mesh.vertices)))
         for v in selected_vert_indices:
-            for neighbor_index in vevmap[v]:
+            for neighbor_index in vert_to_vert_map[v]:
                 next_state[neighbor_index] = True
         mesh.vertices.foreach_set("select",next_state)
-        cachedata[meshkey] = (vevmap,next_state)
+        cachedata[meshkey] = (vert_to_vert_map,next_state)
         bpy.ops.object.mode_set(mode="EDIT")
         return {"FINISHED"}
 
-
+# This one is an alternate / counterpart to the previous.
+# Think: diagonal opposite corners of a quad
+# NOTE: does not apply to a triangle, since verts have no 'opposite'
+#
+#   0--0--0     1--0--1
+#   |  |  |     |  |  |
+#   0--1--0 --> 0--0--0
+#   |  |  |     |  |  |
+#   0--0--0     1--0--1
+#
 class MESH_OT_vneighbors_facewise(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.v2v_facewise"
     bl_label = "Neighbors by Face - Edge"
@@ -102,9 +114,12 @@ class MESH_OT_vneighbors_facewise(meshpoller,bpy.types.Operator):
         meshkey = (len(mesh.vertices),len(mesh.edges),len(mesh.faces),id(self))
         next_state = bytearray(meshkey[0])
         if (meshkey == obj.tkkey) and (meshkey in cachedata):
-            vevmap = cachedata[meshkey]
+            vert_to_vert_map = cachedata[meshkey]
         else:
-            vevmap = map_verts_to_edges(mesh)
+            vert_to_vert_map = {i:{} for i in range(meshkey[0])}
+            for a,b in mesh.edge_keys:
+                vert_to_vert_map[a][b] = 1
+                vert_to_vert_map[b][a] = 1
             obj.tkkey = meshkey
         faces = filter(lambda face:(len(face.vertices)==4) and (face.select == False),mesh.faces)
         for f in faces:
@@ -113,22 +128,34 @@ class MESH_OT_vneighbors_facewise(meshpoller,bpy.types.Operator):
             for v in f.vertices:
                 if mesh.vertices[v].select:
                     has = True
-                    t.update(vevmap[v])
+                    t.update(vert_to_vert_map[v])
             if has:
                 for v in f.vertices:
                     if not mesh.vertices[v].select:
                         if v not in t:
                             next_state[v]=1 
         mesh.vertices.foreach_set("select",next_state)
-        cachedata[meshkey] = vevmap
+        cachedata[meshkey] = vert_to_vert_map
         bpy.ops.object.mode_set(mode="EDIT")
         return {"FINISHED"}
 
 def vvmenuitem(self,context):
     self.layout.operator(MESH_OT_vneighbors_edgewise.bl_idname)
     self.layout.operator(MESH_OT_vneighbors_facewise.bl_idname)
+    #for the sake of completeness, yes there is one alg missing - one for both...
 
+#END VERTICES SECTION
+#BEGIN EDGES SECTION
 
+#   +--0--+--0--+--0--+          +--0--+--0--+--0--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     1     1     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--1--+--0--+   --->   +--0--+--0--+--0--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     1     1     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--0--+--0--+          +--0--+--0--+--0--+
 class MESH_OT_eneighbors_shared_v_f(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.e2e_evfe"
     bl_label = "Neighbors by Vert+Face"
@@ -163,6 +190,15 @@ class MESH_OT_eneighbors_shared_v_f(meshpoller,bpy.types.Operator):
         return {"FINISHED"}
 
 
+#   +--0--+--0--+--0--+          +--0--+--0--+--0--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     1     1     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--1--+--0--+   --->   +--1--+--0--+--1--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     1     1     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--0--+--0--+          +--0--+--0--+--0--+
 class MESH_OT_eneighbors_shared_v(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.e2e_eve"
     bl_label = "Neighbors by Vert"
@@ -178,6 +214,15 @@ class MESH_OT_eneighbors_shared_v(meshpoller,bpy.types.Operator):
         return {"FINISHED"}
 
 
+#   +--0--+--0--+--0--+          +--0--+--1--+--0--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     1     1     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--1--+--0--+   --->   +--0--+--0--+--0--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     1     1     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--0--+--0--+          +--0--+--1--+--0--+
 class MESH_OT_eneighbors_shared_f(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.e2e_efe"
     bl_label = "Neighbors by Face"
@@ -210,7 +255,16 @@ class MESH_OT_eneighbors_shared_f(meshpoller,bpy.types.Operator):
         bpy.ops.object.mode_set(mode="EDIT")
         return {"FINISHED"}
 
-
+# notice that on these next two, the original selection stays
+#   +--0--+--0--+--0--+          +--0--+--1--+--0--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     0     0     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--1--+--0--+   --->   +--0--+--1--+--0--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     0     0     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--0--+--0--+          +--0--+--1--+--0--+
 class MESH_OT_eneighbors_shared_f_notv(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.e2e_efnve"
     bl_label = "Lateral Neighbors"
@@ -253,6 +307,15 @@ class MESH_OT_eneighbors_shared_f_notv(meshpoller,bpy.types.Operator):
 
 
 
+#   +--0--+--0--+--0--+          +--0--+--0--+--0--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     0     0     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--1--+--0--+   --->   +--1--+--1--+--1--+
+#   |     |     |     |          |     |     |     |
+#   0     0     0     0          0     0     0     0
+#   |     |     |     |          |     |     |     |
+#   +--0--+--0--+--0--+          +--0--+--0--+--0--+
 class MESH_OT_eneighbors_shared_v_notf(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.e2e_evnfe"
     bl_label = "Longitudinal Edges"
@@ -295,6 +358,7 @@ class MESH_OT_eneighbors_shared_v_notf(meshpoller,bpy.types.Operator):
         bpy.ops.object.mode_set(mode="EDIT")
         return {"FINISHED"}
  
+#deselects faces, leaving only edges selected
 class MESH_OT_just_the_edges(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.je"
     bl_label = "Just the Edge Selection"
@@ -320,7 +384,8 @@ class MESH_OT_just_the_edges(meshpoller,bpy.types.Operator):
         bpy.ops.object.mode_set(mode="EDIT")
         return {"FINISHED"}
 
-
+# deselects edges which are at the edge of a face-selection,
+# causing selection to 'shrink in'
 class MESH_OT_inner_edges(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.ie"
     bl_label = "Inner Edge Selection"
@@ -361,7 +426,15 @@ def eemenuitem(self,context):
     self.layout.operator(MESH_OT_just_the_edges.bl_idname)
     self.layout.operator(MESH_OT_inner_edges.bl_idname)
 
+#END EDGES SECTION
+#BEGIN FACES SECTION
 
+# here is another one which functions very similarly to the ctrl+NUMPAD_PLUS 'growth'
+# but it deselects the original selection, of course.
+# This would be your checkerboard-type growth.
+#   [0][0][0]          [0][1][0] 
+#   [0][1][0]   --->   [1][0][1]
+#   [0][0][0]          [0][1][0]
 class MESH_OT_fneighbors_shared_e(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.f2f_fef"
     bl_label = "Neighbors by Edge"
@@ -396,6 +469,41 @@ class MESH_OT_fneighbors_shared_e(meshpoller,bpy.types.Operator):
         return {"FINISHED"}
 
 
+#   [0][0][0]          [1][0][1] 
+#   [0][1][0]   --->   [0][0][0]
+#   [0][0][0]          [1][0][1]
+class MESH_OT_fneighbors_shared_v_note(meshpoller,bpy.types.Operator):
+    bl_idname = "mesh.f2f_fvnef"
+    bl_label = "Neighbors by Vert not Edge"
+    bl_options = {"REGISTER","UNDO"}
+    def execute(self,context):
+        global cachedata
+        bpy.ops.object.mode_set(mode="OBJECT")
+        obj = context.active_object
+        mesh = obj.data
+        meshkey = (len(mesh.vertices),len(mesh.edges),len(mesh.faces),id(self))
+        if (meshkey == obj.tkkey) and (meshkey in cachedata):
+            edge_key_to_index = cachedata[meshkey]
+        else:
+            edge_key_to_index = {k:i for i,k in enumerate(mesh.edge_keys)}
+            obj.tkkey = meshkey
+        state_mask = bytearray(meshkey[2])
+        face_verts = set()
+        for f in filter(lambda _:mesh.faces[_].select,range(meshkey[2])):
+            face_verts.update(mesh.faces[f].vertices_raw)
+        for f in filter(lambda _:not mesh.faces[_].select,range(meshkey[2])):
+            ct = 0
+            for v in mesh.faces[f].vertices:
+                ct += (v in face_verts)
+            if ct == 1:
+                state_mask[f] = 1
+        mesh.faces.foreach_set('select',state_mask)
+        cachedata[meshkey] = edge_key_to_index
+        bpy.ops.object.mode_set(mode="EDIT")
+        return {"FINISHED"}
+
+
+# http://en.wikipedia.org/wiki/Conway's_Game_of_Life
 class MESH_OT_conway(meshpoller,bpy.types.Operator):
     bl_idname = "mesh.conway"
     bl_label = "Conway"
@@ -439,6 +547,7 @@ class MESH_OT_conway(meshpoller,bpy.types.Operator):
 
 def ffmenuitem(self,context):
     self.layout.operator(MESH_OT_fneighbors_shared_e.bl_idname)
+    self.layout.operator(MESH_OT_fneighbors_shared_v_note.bl_idname)
     self.layout.operator(MESH_OT_conway.bl_idname)
 
 def register():
@@ -446,6 +555,7 @@ def register():
     bpy.types.VIEW3D_MT_edit_mesh_vertices.append(vvmenuitem)
     bpy.types.VIEW3D_MT_edit_mesh_edges.append(eemenuitem)
     bpy.types.VIEW3D_MT_edit_mesh_faces.append(ffmenuitem)
+
 def unregister():
     bpy.utils.unregister_module(__name__)
     bpy.types.VIEW3D_MT_edit_mesh_vertices.remove(vvmenuitem)
@@ -454,5 +564,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-
-
