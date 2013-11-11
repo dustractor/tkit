@@ -164,7 +164,6 @@ def register():
     list(map(bpy.utils.register_class,these_ops.__subclasses__()))
     keymaps = bpy.context.window_manager.keyconfigs['Blender'].keymaps
     km = keymaps['Mesh'].keymap_items.new
-    km('tapu.dbg',type='SLASH',shift=True,value='PRESS')
     km('tapu.ie',type='QUOTE',value='PRESS')
     km('tapu.oe',type='QUOTE',shift=True,value='PRESS')
     km('tapu.lon',type='RIGHT_BRACKET',value='PRESS')
