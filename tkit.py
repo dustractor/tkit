@@ -37,10 +37,13 @@ notselected = lambda _: not _.select
 tagged = lambda _: _.tag
 nottagged = lambda _: not _.tag
 
-class these_ops:
+
+class tk_op:
     bl_options = {'REGISTER','UNDO'}
     def execute(self,context):
-        self.f(bmesh.from_edit_mesh(context.active_object.data))
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        self.f(bm)
+        bm.select_flush_mode()
         context.area.tag_redraw()
         return {'FINISHED'}
     @classmethod
@@ -50,24 +53,13 @@ class these_ops:
         context.active_object.mode == 'EDIT' and \
         context.scene.tool_settings.mesh_select_mode[1]
 
+
 def op(f):
     return type('TAPU_OT_' + f.__name__,
-    (these_ops,bpy.types.Operator),{
+    (tk_op,bpy.types.Operator),{
         'bl_label': f.__name__,
         'bl_idname': 'tapu.' + f.__name__,
         'f': f})
-
-@op
-def dbg(s,bm):
-    tags,sels,xo = [[],[],[]],[[],[],[]],{0:'-',1:'+'}
-    list(map(tags[0].append,[xo[_.tag] for _ in bm.verts]))
-    list(map(sels[0].append,[xo[_.select] for _ in bm.verts]))
-    list(map(tags[1].append,[xo[_.tag] for _ in bm.edges]))
-    list(map(sels[1].append,[xo[_.select] for _ in bm.edges]))
-    list(map(tags[2].append,[xo[_.tag] for _ in bm.faces]))
-    list(map(sels[2].append,[xo[_.select] for _ in bm.faces]))
-    list(map(print,["".join(_) for _ in tags]))
-    list(map(print,["".join(_) for _ in sels]))
 
 @op
 def ie(s,bm):
@@ -76,7 +68,7 @@ def ie(s,bm):
     for e in filter(tagged,bm.edges):
         e.select_set(0)
         e.tag = 0
-    bm.select_flush_mode()
+
 @op
 def oe(s,bm):
     for e in bm.edges:
@@ -84,7 +76,7 @@ def oe(s,bm):
     for e in filter(tagged,bm.edges):
         e.select_set(0)
         e.tag = 0
-    bm.select_flush_mode()
+
 @op
 def lon(s,bm):
     for e in filter(selected,bm.edges):
@@ -102,6 +94,7 @@ def lon(s,bm):
         e.select_set(1)
     for f in bm.faces:
         f.tag = 0
+
 @op
 def lun(s,bm):
     for e in filter(selected,bm.edges):
@@ -111,6 +104,7 @@ def lun(s,bm):
         v.tag = 0
         for e in filter(selected,v.link_edges):
             e.select_set(0)
+
 @op
 def epz(s,bm):
     for e in filter(selected,bm.edges):
@@ -123,6 +117,7 @@ def epz(s,bm):
         e.select_set(e.select)
     for v in bm.verts:
         v.tag = 0
+
 @op
 def ef1n(s,bm):
     for e in filter(selected,bm.edges):
@@ -132,6 +127,7 @@ def ef1n(s,bm):
     for e in bm.edges:
         e.select_set(e.tag)
         e.tag = 0
+
 @op
 def ef2n(s,bm):
     for e in filter(selected,bm.edges):
@@ -141,6 +137,7 @@ def ef2n(s,bm):
     for e in bm.edges:
         e.select_set(e.tag)
         e.tag = 0
+
 @op
 def ef2np(s,bm):
     for e in filter(selected,bm.edges):
@@ -150,6 +147,7 @@ def ef2np(s,bm):
     for e in bm.edges:
         e.select_set(e.tag)
         e.tag = 0
+
 @op
 def ef2nx(s,bm):
     for e in filter(selected,bm.edges):
@@ -161,7 +159,7 @@ def ef2nx(s,bm):
         e.tag = 0
 
 def register():
-    list(map(bpy.utils.register_class,these_ops.__subclasses__()))
+    list(map(bpy.utils.register_class,tk_op.__subclasses__()))
     keymaps = bpy.context.window_manager.keyconfigs['Blender'].keymaps
     km = keymaps['Mesh'].keymap_items.new
     km('tapu.ie',type='QUOTE',value='PRESS')
@@ -175,7 +173,8 @@ def register():
     km('tapu.ef2nx',type='BACK_SLASH',ctrl=True,alt=True,shift=True,value='PRESS')
 
 def unregister():
-    list(map(bpy.utils.unregister_class,these_ops.__subclasses__()))
+    list(map(bpy.utils.unregister_class,tk_op.__subclasses__()))
+
 if __name__ == '__main__':
     register()
 
