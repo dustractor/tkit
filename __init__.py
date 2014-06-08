@@ -18,7 +18,7 @@
 
 bl_info = {
     "name": "tkit",
-    "author": "shams kitz aka dustractor",
+    "author": "dustractor@gmail.com",
     "version": (5,1),
     "blender": (2,6,7),
     "api": 56794,
