@@ -18,12 +18,13 @@
 
 bl_info = {
         "name":        "tkit",
-        "description": "edgemode select ops and hotkeys",
-        "author":      "dustractor",
-        "version":     (4,3),
-        "blender":     (2,77,0),
+        "description": "edgemode select ops plus hotkeys",
+        "author":      "Shams Kitz <dustractor@gmail.com>",
+        "version":     (5,0),
+        "blender":     (2,69,0),
         "location":    "",
         "warning":     "",
+        "tracker_url": "https://github.com/dustractor/tkit",
         "wiki_url":    "",
         "category":    "Mesh"}
 
@@ -214,15 +215,17 @@ class TKIT_OT_ef2nx(EdgeSelectMode,bpy.types.Operator):
 
 
 class TKIT_OT_help(bpy.types.Operator):
-    """ ie '
-        oe "
-        lon ]
-        lun [
-        ef1n \\
-        ef2n |
-        ef2np C-|
-        ef2nx C-A-|
-        epz C-S-A-END """
+    """
+    ie '
+    oe "
+    lon ]
+    lun [
+    ef1n \\
+    ef2n |
+    ef2np C-|
+    ef2nx C-A-|
+    epz C-S-A-END
+    """
     bl_label = "tkit quickhelp"
     bl_idname = "tkit.huh"
     bl_options = {"REGISTER","UNDO"}
@@ -235,6 +238,7 @@ class TKIT_OT_help(bpy.types.Operator):
             p,ign,q = ln.strip().partition(" ")
             a.label(p)
             b.label(q)
+        print(self.__doc__)
         layout.label("in edit mode")
         layout.label("with edge selection")
         layout.label("C=ctrl")
