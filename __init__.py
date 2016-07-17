@@ -35,17 +35,19 @@ notselected = lambda _: not _.select
 tagged = lambda _: _.tag
 nottagged = lambda _: not _.tag
 
-
-class TAPU_OT_ie(bpy.types.Operator):
-    bl_options = {'REGISTER','UNDO'}
-    bl_label = "ie"
-    bl_idname = 'tapu.ie'
+class EdgeSelectMode:
     @classmethod
     def poll(self,context):
         return context.active_object and \
         context.active_object.type == 'MESH' and \
         context.active_object.mode == 'EDIT' and \
         context.scene.tool_settings.mesh_select_mode[1]
+
+
+class TAPU_OT_ie(EdgeSelectMode,bpy.types.Operator):
+    bl_options = {'REGISTER','UNDO'}
+    bl_label = "ie"
+    bl_idname = 'tapu.ie'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in bm.edges:
@@ -57,16 +59,11 @@ class TAPU_OT_ie(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
-class TAPU_OT_oe(bpy.types.Operator):
+
+class TAPU_OT_oe(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "oe"
     bl_idname = 'tapu.oe'
-    @classmethod
-    def poll(self,context):
-        return context.active_object and \
-        context.active_object.type == 'MESH' and \
-        context.active_object.mode == 'EDIT' and \
-        context.scene.tool_settings.mesh_select_mode[1]
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in bm.edges:
@@ -78,16 +75,11 @@ class TAPU_OT_oe(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
-class TAPU_OT_lon(bpy.types.Operator):
+
+class TAPU_OT_lon(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "lon"
     bl_idname = 'tapu.lon'
-    @classmethod
-    def poll(self,context):
-        return context.active_object and \
-        context.active_object.type == 'MESH' and \
-        context.active_object.mode == 'EDIT' and \
-        context.scene.tool_settings.mesh_select_mode[1]
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -109,16 +101,11 @@ class TAPU_OT_lon(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
-class TAPU_OT_lun(bpy.types.Operator):
+
+class TAPU_OT_lun(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "lun"
     bl_idname = 'tapu.lun'
-    @classmethod
-    def poll(self,context):
-        return context.active_object and \
-        context.active_object.type == 'MESH' and \
-        context.active_object.mode == 'EDIT' and \
-        context.scene.tool_settings.mesh_select_mode[1]
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -132,16 +119,11 @@ class TAPU_OT_lun(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
-class TAPU_OT_epz(bpy.types.Operator):
+
+class TAPU_OT_epz(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "epz"
     bl_idname = 'tapu.epz'
-    @classmethod
-    def poll(self,context):
-        return context.active_object and \
-        context.active_object.type == 'MESH' and \
-        context.active_object.mode == 'EDIT' and \
-        context.scene.tool_settings.mesh_select_mode[1]
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -158,16 +140,11 @@ class TAPU_OT_epz(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
-class TAPU_OT_ef1n(bpy.types.Operator):
+
+class TAPU_OT_ef1n(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ef1n"
     bl_idname = 'tapu.ef1n'
-    @classmethod
-    def poll(self,context):
-        return context.active_object and \
-        context.active_object.type == 'MESH' and \
-        context.active_object.mode == 'EDIT' and \
-        context.scene.tool_settings.mesh_select_mode[1]
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -181,16 +158,11 @@ class TAPU_OT_ef1n(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
-class TAPU_OT_ef2n(bpy.types.Operator):
+
+class TAPU_OT_ef2n(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ef2n"
     bl_idname = 'tapu.ef2n'
-    @classmethod
-    def poll(self,context):
-        return context.active_object and \
-        context.active_object.type == 'MESH' and \
-        context.active_object.mode == 'EDIT' and \
-        context.scene.tool_settings.mesh_select_mode[1]
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -204,16 +176,11 @@ class TAPU_OT_ef2n(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
-class TAPU_OT_ef2np(bpy.types.Operator):
+
+class TAPU_OT_ef2np(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ef2np"
     bl_idname = 'tapu.ef2np'
-    @classmethod
-    def poll(self,context):
-        return context.active_object and \
-        context.active_object.type == 'MESH' and \
-        context.active_object.mode == 'EDIT' and \
-        context.scene.tool_settings.mesh_select_mode[1]
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -228,16 +195,10 @@ class TAPU_OT_ef2np(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_ef2nx(bpy.types.Operator):
+class TAPU_OT_ef2nx(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ef2nx"
     bl_idname = 'tapu.ef2nx'
-    @classmethod
-    def poll(self,context):
-        return context.active_object and \
-        context.active_object.type == 'MESH' and \
-        context.active_object.mode == 'EDIT' and \
-        context.scene.tool_settings.mesh_select_mode[1]
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -251,7 +212,45 @@ class TAPU_OT_ef2nx(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
+
+class TAPU_OT_huh(bpy.types.Operator):
+    bl_label = "tkit quickhelp"
+    bl_idname = "tkit.huh"
+    bl_options = {"REGISTER","UNDO"}
+    def draw(self,context):
+        box = self.layout.box()
+        box.label("in edit mode")
+        box.label("with edge selection")
+        box.label("C=ctrl")
+        box.label("S=shift")
+        box.label("A=alt")
+        box.separator()
+        split = box.split()
+        a,b = split.column(),split.column()
+        a.label("ie")
+        b.label("'")
+        a.label("oe")
+        b.label('"')
+        a.label("lon")
+        b.label("]")
+        a.label("lun")
+        b.label("[")
+        a.label("epz")
+        b.label("C-S-A-END")
+        a.label("ef1n")
+        b.label("\\")
+        a.label("ef2n")
+        b.label("|")
+        a.label("ef2np")
+        b.label("C-|")
+        a.label("ef2nx")
+        b.label("C-A-|")
+
+    def execute(self,context):
+        return {'FINISHED'}
+
 classes = (
+        TAPU_OT_huh,
         TAPU_OT_ie,
         TAPU_OT_oe,
         TAPU_OT_lon,
@@ -267,6 +266,7 @@ def register():
     list(map(bpy.utils.register_class,classes))
     keymaps = bpy.context.window_manager.keyconfigs['Blender'].keymaps
     km = keymaps['Mesh'].keymap_items.new
+
     km('tapu.ie',type='QUOTE',value='PRESS')
     km('tapu.oe',type='QUOTE',shift=True,value='PRESS')
     km('tapu.lon',type='RIGHT_BRACKET',value='PRESS')

@@ -1,1 +1,21 @@
-This readme has been intentionally left blank.
+#tkit
+
+---
+
+``'``
+
+``"``
+
+``]``
+
+``[``
+
+``\``
+
+``|``
+
+``<C-S-A-End>``
+
+``<C-|``
+
+``<C-A-|>``
