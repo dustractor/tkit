@@ -44,10 +44,10 @@ class EdgeSelectMode:
         context.scene.tool_settings.mesh_select_mode[1]
 
 
-class TAPU_OT_ie(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_ie(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ie"
-    bl_idname = 'tapu.ie'
+    bl_idname = 'tkit.ie'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in bm.edges:
@@ -60,10 +60,10 @@ class TAPU_OT_ie(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_oe(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_oe(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "oe"
-    bl_idname = 'tapu.oe'
+    bl_idname = 'tkit.oe'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in bm.edges:
@@ -76,10 +76,10 @@ class TAPU_OT_oe(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_lon(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_lon(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "lon"
-    bl_idname = 'tapu.lon'
+    bl_idname = 'tkit.lon'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -102,10 +102,10 @@ class TAPU_OT_lon(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_lun(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_lun(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "lun"
-    bl_idname = 'tapu.lun'
+    bl_idname = 'tkit.lun'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -120,10 +120,10 @@ class TAPU_OT_lun(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_epz(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_epz(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "epz"
-    bl_idname = 'tapu.epz'
+    bl_idname = 'tkit.epz'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -141,10 +141,10 @@ class TAPU_OT_epz(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_ef1n(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_ef1n(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ef1n"
-    bl_idname = 'tapu.ef1n'
+    bl_idname = 'tkit.ef1n'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -159,10 +159,10 @@ class TAPU_OT_ef1n(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_ef2n(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_ef2n(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ef2n"
-    bl_idname = 'tapu.ef2n'
+    bl_idname = 'tkit.ef2n'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -177,10 +177,10 @@ class TAPU_OT_ef2n(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_ef2np(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_ef2np(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ef2np"
-    bl_idname = 'tapu.ef2np'
+    bl_idname = 'tkit.ef2np'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -195,10 +195,10 @@ class TAPU_OT_ef2np(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_ef2nx(EdgeSelectMode,bpy.types.Operator):
+class TKIT_OT_ef2nx(EdgeSelectMode,bpy.types.Operator):
     bl_options = {'REGISTER','UNDO'}
     bl_label = "ef2nx"
-    bl_idname = 'tapu.ef2nx'
+    bl_idname = 'tkit.ef2nx'
     def execute(self,context):
         bm = bmesh.from_edit_mesh(context.active_object.data)
         for e in filter(selected,bm.edges):
@@ -213,71 +213,64 @@ class TAPU_OT_ef2nx(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TAPU_OT_huh(bpy.types.Operator):
+class TKIT_OT_help(bpy.types.Operator):
+    """ ie '
+        oe "
+        lon ]
+        lun [
+        ef1n \\
+        ef2n |
+        ef2np C-|
+        ef2nx C-A-|
+        epz C-S-A-END """
     bl_label = "tkit quickhelp"
     bl_idname = "tkit.huh"
     bl_options = {"REGISTER","UNDO"}
     def draw(self,context):
-        box = self.layout.box()
-        box.label("in edit mode")
-        box.label("with edge selection")
-        box.label("C=ctrl")
-        box.label("S=shift")
-        box.label("A=alt")
-        box.separator()
+        layout = self.layout
+        box = layout.box()
         split = box.split()
         a,b = split.column(),split.column()
-        a.label("ie")
-        b.label("'")
-        a.label("oe")
-        b.label('"')
-        a.label("lon")
-        b.label("]")
-        a.label("lun")
-        b.label("[")
-        a.label("epz")
-        b.label("C-S-A-END")
-        a.label("ef1n")
-        b.label("\\")
-        a.label("ef2n")
-        b.label("|")
-        a.label("ef2np")
-        b.label("C-|")
-        a.label("ef2nx")
-        b.label("C-A-|")
-
+        for ln in filter(None,self.__doc__.splitlines()):
+            p,ign,q = ln.strip().partition(" ")
+            a.label(p)
+            b.label(q)
+        layout.label("in edit mode")
+        layout.label("with edge selection")
+        layout.label("C=ctrl")
+        layout.label("S=shift")
+        layout.label("A=alt")
     def execute(self,context):
         return {'FINISHED'}
 
+
 classes = (
-        TAPU_OT_huh,
-        TAPU_OT_ie,
-        TAPU_OT_oe,
-        TAPU_OT_lon,
-        TAPU_OT_lun,
-        TAPU_OT_epz,
-        TAPU_OT_ef1n,
-        TAPU_OT_ef2n,
-        TAPU_OT_ef2np,
-        TAPU_OT_ef2nx)
+        TKIT_OT_help,
+        TKIT_OT_ie,
+        TKIT_OT_oe,
+        TKIT_OT_lon,
+        TKIT_OT_lun,
+        TKIT_OT_epz,
+        TKIT_OT_ef1n,
+        TKIT_OT_ef2n,
+        TKIT_OT_ef2np,
+        TKIT_OT_ef2nx)
 
 
 def register():
     list(map(bpy.utils.register_class,classes))
     keymaps = bpy.context.window_manager.keyconfigs['Blender'].keymaps
     km = keymaps['Mesh'].keymap_items.new
-
-    km('tapu.ie',type='QUOTE',value='PRESS')
-    km('tapu.oe',type='QUOTE',shift=True,value='PRESS')
-    km('tapu.lon',type='RIGHT_BRACKET',value='PRESS')
-    km('tapu.lun',type='LEFT_BRACKET',value='PRESS')
-    km('tapu.epz',type='END',ctrl=True,alt=True,shift=True,value='PRESS')
-    km('tapu.ef1n',type='BACK_SLASH',value='PRESS')
-    km('tapu.ef2n',type='BACK_SLASH',shift=True,value='PRESS')
-    km('tapu.ef2np',type='BACK_SLASH',ctrl=True,shift=True,value='PRESS')
-    km('tapu.ef2nx',type='BACK_SLASH',ctrl=True,alt=True,shift=True,value='PRESS')
+    km('tkit.ie',type='QUOTE',value='PRESS')
+    km('tkit.oe',type='QUOTE',shift=True,value='PRESS')
+    km('tkit.lon',type='RIGHT_BRACKET',value='PRESS')
+    km('tkit.lun',type='LEFT_BRACKET',value='PRESS')
+    km('tkit.ef1n',type='BACK_SLASH',value='PRESS')
+    km('tkit.ef2n',type='BACK_SLASH',shift=True,value='PRESS')
+    km('tkit.ef2np',type='BACK_SLASH',ctrl=True,shift=True,value='PRESS')
+    km('tkit.ef2nx',type='BACK_SLASH',ctrl=True,alt=True,shift=True,value='PRESS')
+    km('tkit.epz',type='END',ctrl=True,alt=True,shift=True,value='PRESS')
 
 def unregister():
     list(map(bpy.utils.unregister_class,classes))
-
 
