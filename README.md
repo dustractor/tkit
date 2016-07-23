@@ -26,7 +26,7 @@ are for selecting edges in edit mode.
 * ef1n: Edge Face one Neighbor  
 * ef2n: Edge Face two Neighbor  
 * ef2np:Edge Face two Neighbor Perpendicularizational  
-* ef2np:Edge Face two Neighbor perpleXing  
+* ef2nx:Edge Face two Neighbor perpleXing  
 * epz: End-PointZ  
 
 ---
