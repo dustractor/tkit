@@ -214,42 +214,7 @@ class TKIT_OT_ef2nx(EdgeSelectMode,bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TKIT_OT_help(bpy.types.Operator):
-    """
-    ie '
-    oe "
-    lon ]
-    lun [
-    ef1n \\
-    ef2n |
-    ef2np C-|
-    ef2nx C-A-|
-    epz C-S-A-END
-    """
-    bl_label = "tkit quickhelp"
-    bl_idname = "tkit.huh"
-    bl_options = {"REGISTER","UNDO"}
-    def draw(self,context):
-        layout = self.layout
-        box = layout.box()
-        split = box.split()
-        a,b = split.column(),split.column()
-        for ln in filter(None,self.__doc__.splitlines()):
-            p,ign,q = ln.strip().partition(" ")
-            a.label(p)
-            b.label(q)
-        print(self.__doc__)
-        layout.label("in edit mode")
-        layout.label("with edge selection")
-        layout.label("C=ctrl")
-        layout.label("S=shift")
-        layout.label("A=alt")
-    def execute(self,context):
-        return {'FINISHED'}
-
-
 classes = (
-        TKIT_OT_help,
         TKIT_OT_ie,
         TKIT_OT_oe,
         TKIT_OT_lon,
@@ -260,21 +225,26 @@ classes = (
         TKIT_OT_ef2np,
         TKIT_OT_ef2nx)
 
+class tkitmenu(bpy.types.Menu):
+    bl_idname = "tkit.menu"
+    bl_label = "tkit"
+    def draw(self,context):
+        if EdgeSelectMode.poll(context):
+            box = self.layout.box()
+            col = box.column(align=True)
+            for c in classes:
+                col.operator(c.bl_idname)
+
+def tkit_menudraw(self,context):
+    self.layout.menu("tkit.menu")
 
 def register():
-    list(map(bpy.utils.register_class,classes))
-    keymaps = bpy.context.window_manager.keyconfigs['Blender'].keymaps
-    km = keymaps['Mesh'].keymap_items.new
-    km('tkit.ie',type='QUOTE',value='PRESS')
-    km('tkit.oe',type='QUOTE',shift=True,value='PRESS')
-    km('tkit.lon',type='RIGHT_BRACKET',value='PRESS')
-    km('tkit.lun',type='LEFT_BRACKET',value='PRESS')
-    km('tkit.ef1n',type='BACK_SLASH',value='PRESS')
-    km('tkit.ef2n',type='BACK_SLASH',shift=True,value='PRESS')
-    km('tkit.ef2np',type='BACK_SLASH',ctrl=True,shift=True,value='PRESS')
-    km('tkit.ef2nx',type='BACK_SLASH',ctrl=True,alt=True,shift=True,value='PRESS')
-    km('tkit.epz',type='END',ctrl=True,alt=True,shift=True,value='PRESS')
+    bpy.utils.register_module(__name__)
+    bpy.types.VIEW3D_MT_edit_mesh_edges.append(tkit_menudraw)
+    bpy.types.VIEW3D_PT_tools_meshedit.append(tkitmenu.draw)
 
 def unregister():
-    list(map(bpy.utils.unregister_class,classes))
+    bpy.types.VIEW3D_MT_edit_mesh_edges.remove(tkit_menudraw)
+    bpy.types.VIEW3D_PT_tools_meshedit.remove(tkitmenu.draw)
+    bpy.utils.unregister_module(__name__)
 
