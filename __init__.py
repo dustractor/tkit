@@ -266,9 +266,7 @@ def register():
             else:
                 mapt = mapx
             ctrl,shift,alt,oskey = map(lambda _:_ in modx.upper(),"CSAO")
-            print("ctrl,shift,alt,oskey:",ctrl,shift,alt,oskey)
             mapt = mapt.strip()
-            print("mapt:",mapt)
             kmi = km.keymap_items.new(
                     opn, type=mapt, value="PRESS",
                     shift=shift, ctrl=ctrl, alt=alt, oskey=oskey)
