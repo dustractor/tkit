@@ -18,11 +18,11 @@
 
 bl_info = {
         "name":        "tkit",
-        "description": "edgemode select ops plus hotkeys",
+        "description": "edgemode select ops w/ configurable hotkeys",
         "author":      "Shams Kitz <dustractor@gmail.com>",
-        "version":     (5,2),
+        "version":     (5,3),
         "blender":     (2,78,0),
-        "location":    "MeshEdit Tools Panel,Edge Menu,(+hotkeys)",
+        "location":    "Mesh Tools, Edge Menu, and hotkeys in edge-select mode",
         "warning":     "",
         "tracker_url": "https://github.com/dustractor/tkit",
         "wiki_url":    "",
@@ -231,13 +231,35 @@ def ef2nx(self,context):
     context.area.tag_redraw()
     return {'FINISHED'}
 
+class tkitPrefs(bpy.types.AddonPreferences):
+    bl_idname = __name__
+    def draw(self,context):
+        layout = self.layout
+        for op in tkit.ops:
+            opn = op.bl_idname
+            t = opn.partition(".")[2]
+            layout.prop(self,t)
+
+for opn,mapx in tkit.maps:
+    t = opn.partition(".")[2]
+    setattr(
+            tkitPrefs,
+            t,
+            bpy.props.StringProperty(default=mapx))
+
 def register():
     list(map(bpy.utils.register_class,tkit.classes))
+    bpy.utils.register_class(tkitPrefs)
+
+    prefs = bpy.context.user_preferences.addons[__name__].preferences
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
     if kc:
         km = kc.keymaps.new("Mesh",space_type="EMPTY")
-        for opn,mapx in tkit.maps:
+        for op in tkit.ops:
+            opn = op.bl_idname
+            t = opn.partition(".")[2]
+            mapx = getattr(prefs,t)
             modx = ""
             if "+" in mapx:
                 modx,ign,mapt = mapx.partition("+")
@@ -260,5 +282,6 @@ def unregister():
     tkit.mapdata.clear()
     bpy.types.VIEW3D_MT_edit_mesh_edges.remove(tkit.menudraw)
     bpy.types.VIEW3D_PT_tools_meshedit.remove(tkit.menu.draw)
+    bpy.utils.unregister_class(tkitPrefs)
     list(map(bpy.utils.unregister_class,tkit.classes))
 
