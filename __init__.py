@@ -18,10 +18,10 @@
 
 bl_info = {
         "name":        "tkit",
-        "description": "edgemode select ops w/ configurable hotkeys",
+        "description": "Edge mode selection operators",
         "author":      "Shams Kitz <dustractor@gmail.com>",
-        "version":     (5,3),
-        "blender":     (2,78,0),
+        "version":     (5,4),
+        "blender":     (2,80,0),
         "location":    "Mesh Tools, Edge Menu, and hotkeys in edge-select mode",
         "warning":     "",
         "tracker_url": "https://github.com/dustractor/tkit",
@@ -32,254 +32,306 @@ bl_info = {
 import bpy
 import bmesh
 
+
+class TKIT_MT_menu(bpy.types.Menu):
+    bl_label = "tkit ops"
+    def draw(self,context):
+        layout = self.layout
+        layout.operator("tkit.ie")
+        layout.operator("tkit.oe")
+        layout.operator("tkit.lon")
+        layout.operator("tkit.lun")
+        layout.operator("tkit.epz")
+        layout.operator("tkit.ef1n")
+        layout.operator("tkit.ef2n")
+        layout.operator("tkit.ef2np")
+        layout.operator("tkit.ef2nx")
+
 selected = lambda _: _.select
 notselected = lambda _: not _.select
 tagged = lambda _: _.tag
 nottagged = lambda _: not _.tag
 
-class EdgeSelectMode:
+class TKIT_OT_lon(bpy.types.Operator):
+    bl_idname = "tkit.lon"
+    bl_label = "lon"
     @classmethod
     def poll(self,context):
         return (context.active_object and
                 context.active_object.type == 'MESH' and
                 context.active_object.mode == 'EDIT' and
                 context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        print(bm)
+        for e in filter(selected,bm.edges):
+            for v in e.verts:
+                v.tag ^= 1
+            for f in e.link_faces:
+                f.tag = 1
+        efs = {f.index for f in filter(tagged,bm.faces)}
+        print("efs:",efs)
+        for v in filter(tagged,bm.verts):
+            v.tag = 0
+            for e in filter(notselected,v.link_edges):
+                e.tag = {f.index for f in e.link_faces}.isdisjoint(efs)
+        for e in filter(tagged,bm.edges):
+            e.tag = 0
+            e.select_set(1)
+            print("e:",e)
+        for f in bm.faces:
+            f.tag = 0
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {"FINISHED"}
 
-class TKIT:
-    mapdata = []
-    ops = []
-    maps = []
 
-    def __init__(self):
-        def draw(s,c):
-            if EdgeSelectMode.poll(c):
-                for op in self.ops:
-                    s.layout.operator(op.bl_idname)
-        self.menu = type("TKIT_MT_menu",(bpy.types.Menu,),
-                dict(
-                    bl_label="tkit",
-                    bl_idname="tkit.menu",
-                    draw=draw))
 
-    @property
-    def classes(self):
-        return [self.menu] + self.ops
-
+class TKIT_OT_ie(bpy.types.Operator):
+    bl_idname = "tkit.ie"
+    bl_label = "ie"
     @classmethod
-    def op(cls,f):
-        n = f.__name__.lower()
-        lbl,ign,mapx = f.__doc__.partition(":")
-        ncls = type(
-                "TKIT_OT_"+n,
-                (EdgeSelectMode,bpy.types.Operator),
-                dict(
-                    bl_idname="tkit."+n,
-                    bl_label=lbl,
-                    bl_options={"REGISTER","UNDO"},
-                    execute=f))
-        cls.ops.append(ncls)
-        if mapx:
-            cls.maps.append((ncls.bl_idname,mapx))
-        return ncls
-
-    @staticmethod
-    def menudraw(self,context):
-        self.layout.menu("tkit.menu")
-
-tkit = TKIT()
-
-@tkit.op
-def ie(self,context):
-    '''Inner edges : QUOTE '''
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in bm.edges:
-        e.tag = len(list(filter(selected,e.link_faces))) == 1
-    for e in filter(tagged,bm.edges):
-        e.select_set(0)
-        e.tag = 0
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
-
-@tkit.op
-def oe(self,context):
-    '''Outer Edges : S+QUOTE '''
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in bm.edges:
-        e.tag = len(list(filter(selected,e.link_faces))) == 2
-    for e in filter(tagged,bm.edges):
-        e.select_set(0)
-        e.tag = 0
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
-
-@tkit.op
-def lon(self,context):
-    ''' lon : RIGHT_BRACKET '''
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in filter(selected,bm.edges):
-        for v in e.verts:
-            v.tag ^= 1
-        for f in e.link_faces:
-            f.tag = 1
-    efs = {f.index for f in filter(tagged,bm.faces)}
-    for v in filter(tagged,bm.verts):
-        v.tag = 0
-        for e in filter(notselected,v.link_edges):
-            e.tag = {f.index for f in e.link_faces}.isdisjoint(efs)
-    for e in filter(tagged,bm.edges):
-        e.tag = 0
-        e.select_set(1)
-    for f in bm.faces:
-        f.tag = 0
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
-
-@tkit.op
-def lun(self,context):
-    ''' lun (un-lon) : LEFT_BRACKET '''
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in filter(selected,bm.edges):
-        for v in e.verts:
-            v.tag ^= 1
-    for v in filter(tagged,bm.verts):
-        v.tag = 0
-        for e in filter(selected,v.link_edges):
+    def poll(self,context):
+        return (context.active_object and
+                context.active_object.type == 'MESH' and
+                context.active_object.mode == 'EDIT' and
+                context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        for e in bm.edges:
+            e.tag = len(list(filter(selected,e.link_faces))) == 1
+        for e in filter(tagged,bm.edges):
             e.select_set(0)
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
+            e.tag = 0
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {'FINISHED'}
 
-@tkit.op
-def epz(self,context):
-    ''' epz : CSA+END '''
+class TKIT_OT_oe(bpy.types.Operator):
+    bl_idname = "tkit.oe"
+    bl_label = "oe"
+    @classmethod
+    def poll(self,context):
+        return (context.active_object and
+                context.active_object.type == 'MESH' and
+                context.active_object.mode == 'EDIT' and
+                context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        for e in bm.edges:
+            e.tag = len(list(filter(selected,e.link_faces))) == 2
+        for e in filter(tagged,bm.edges):
+            e.select_set(0)
+            e.tag = 0
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {'FINISHED'}
 
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in filter(selected,bm.edges):
-        for v in e.verts:
-            v.tag ^= 1
-    for v in filter(tagged,bm.verts):
-        for e in v.link_edges:
-            e.select ^=1
-    for e in bm.edges:
-        e.select_set(e.select)
-    for v in bm.verts:
-        v.tag = 0
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
 
-@tkit.op
-def ef1n(self,context):
-    ''' ef1n : BACK_SLASH '''
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in filter(selected,bm.edges):
-        for f in filter(notselected,e.link_faces):
-            for fe in filter(notselected,f.edges):
-                fe.tag = len(list(filter(selected,fe.verts))) == 1
-    for e in bm.edges:
-        e.select_set(e.tag)
-        e.tag = 0
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
+class TKIT_OT_lun(bpy.types.Operator):
+    bl_idname = "tkit.lun"
+    bl_label = "lun"
+    @classmethod
+    def poll(self,context):
+        return (context.active_object and
+                context.active_object.type == 'MESH' and
+                context.active_object.mode == 'EDIT' and
+                context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        for e in filter(selected,bm.edges):
+            for v in e.verts:
+                v.tag ^= 1
+        for v in filter(tagged,bm.verts):
+            v.tag = 0
+            for e in filter(selected,v.link_edges):
+                e.select_set(0)
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {'FINISHED'}
 
-@tkit.op
-def ef2n(self,context):
-    ''' ef2n : S+BACK_SLASH '''
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in filter(selected,bm.edges):
-        for f in filter(notselected,e.link_faces):
-            for fe in filter(notselected,f.edges):
-                fe.tag = len(list(filter(notselected,fe.verts))) == 2
-    for e in bm.edges:
-        e.select_set(e.tag)
-        e.tag = 0
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
+class TKIT_OT_epz(bpy.types.Operator):
+    bl_idname = "tkit.epz"
+    bl_label = "epz"
+    @classmethod
+    def poll(self,context):
+        return (context.active_object and
+                context.active_object.type == 'MESH' and
+                context.active_object.mode == 'EDIT' and
+                context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        for e in filter(selected,bm.edges):
+            for v in e.verts:
+                v.tag ^= 1
+        for v in filter(tagged,bm.verts):
+            for e in v.link_edges:
+                e.select ^=1
+        for e in bm.edges:
+            e.select_set(e.select)
+        for v in bm.verts:
+            v.tag = 0
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {'FINISHED'}
 
-@tkit.op
-def ef2np(self,context):
-    ''' ef2np : CS+BACK_SLASH '''
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in filter(selected,bm.edges):
-        for f in filter(notselected,e.link_faces):
-            for fe in filter(notselected,f.edges):
-                fe.tag ^= len(list(filter(notselected,fe.verts))) == 2
-    for e in bm.edges:
-        e.select_set(e.tag)
-        e.tag = 0
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
+class TKIT_OT_ef1n(bpy.types.Operator):
+    bl_idname = "tkit.ef1n"
+    bl_label = "ef1n"
+    @classmethod
+    def poll(self,context):
+        return (context.active_object and
+                context.active_object.type == 'MESH' and
+                context.active_object.mode == 'EDIT' and
+                context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        for e in filter(selected,bm.edges):
+            for f in filter(notselected,e.link_faces):
+                for fe in filter(notselected,f.edges):
+                    fe.tag = len(list(filter(selected,fe.verts))) == 1
+        for e in bm.edges:
+            e.select_set(e.tag)
+            e.tag = 0
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {'FINISHED'}
 
-@tkit.op
-def ef2nx(self,context):
-    ''' ef2nx : CSA+BACK_SLASH '''
-    bm = bmesh.from_edit_mesh(context.active_object.data)
-    for e in filter(selected,bm.edges):
-        for f in filter(notselected,e.link_faces):
-            for fe in filter(notselected,f.edges):
-                fe.tag = 1
-    for e in bm.edges:
-        e.select_set(e.tag)
-        e.tag = 0
-    bm.select_flush_mode()
-    context.area.tag_redraw()
-    return {'FINISHED'}
+class TKIT_OT_ef2n(bpy.types.Operator):
+    bl_idname = "tkit.ef2n"
+    bl_label = "ef2n"
+    @classmethod
+    def poll(self,context):
+        return (context.active_object and
+                context.active_object.type == 'MESH' and
+                context.active_object.mode == 'EDIT' and
+                context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        for e in filter(selected,bm.edges):
+            for f in filter(notselected,e.link_faces):
+                for fe in filter(notselected,f.edges):
+                    fe.tag = len(list(filter(notselected,fe.verts))) == 2
+        for e in bm.edges:
+            e.select_set(e.tag)
+            e.tag = 0
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {'FINISHED'}
 
-class tkitPrefs(bpy.types.AddonPreferences):
-    bl_idname = __name__
-    def draw(self,context):
-        layout = self.layout
-        for op in tkit.ops:
-            opn = op.bl_idname
-            t = opn.partition(".")[2]
-            layout.prop(self,t)
+class TKIT_OT_ef2np(bpy.types.Operator):
+    bl_idname = "tkit.ef2np"
+    bl_label = "ef2np"
+    @classmethod
+    def poll(self,context):
+        return (context.active_object and
+                context.active_object.type == 'MESH' and
+                context.active_object.mode == 'EDIT' and
+                context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        for e in filter(selected,bm.edges):
+            for f in filter(notselected,e.link_faces):
+                for fe in filter(notselected,f.edges):
+                    fe.tag ^= len(list(filter(notselected,fe.verts))) == 2
+        for e in bm.edges:
+            e.select_set(e.tag)
+            e.tag = 0
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {'FINISHED'}
 
-for opn,mapx in tkit.maps:
-    t = opn.partition(".")[2]
-    setattr(
-            tkitPrefs,
-            t,
-            bpy.props.StringProperty(default=mapx))
-
+class TKIT_OT_ef2nx(bpy.types.Operator):
+    bl_idname = "tkit.ef2nx"
+    bl_label = "ef2nx"
+    @classmethod
+    def poll(self,context):
+        return (context.active_object and
+                context.active_object.type == 'MESH' and
+                context.active_object.mode == 'EDIT' and
+                context.scene.tool_settings.mesh_select_mode[1])
+    def execute(self,context):
+        bm = bmesh.from_edit_mesh(context.active_object.data)
+        for e in filter(selected,bm.edges):
+            for f in filter(notselected,e.link_faces):
+                for fe in filter(notselected,f.edges):
+                    fe.tag = 1
+        for e in bm.edges:
+            e.select_set(e.tag)
+            e.tag = 0
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
+        context.area.tag_redraw()
+        return {'FINISHED'}
+km = None
+kmis = []
 def register():
-    list(map(bpy.utils.register_class,tkit.classes))
-    bpy.utils.register_class(tkitPrefs)
-
-    prefs = bpy.context.user_preferences.addons[__name__].preferences
+    global km
+    kmis.clear()
+    bpy.utils.register_class(TKIT_OT_ie)
+    bpy.utils.register_class(TKIT_OT_oe)
+    bpy.utils.register_class(TKIT_OT_lon)
+    bpy.utils.register_class(TKIT_OT_lun)
+    bpy.utils.register_class(TKIT_OT_epz)
+    bpy.utils.register_class(TKIT_OT_ef1n)
+    bpy.utils.register_class(TKIT_OT_ef2n)
+    bpy.utils.register_class(TKIT_OT_ef2np)
+    bpy.utils.register_class(TKIT_OT_ef2nx)
+    bpy.utils.register_class(TKIT_MT_menu)
+    bpy.types.VIEW3D_MT_select_edit_mesh.append(lambda s,c:s.layout.menu("TKIT_MT_menu"))
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
     if kc:
         km = kc.keymaps.new("Mesh",space_type="EMPTY")
-        for op in tkit.ops:
-            opn = op.bl_idname
-            t = opn.partition(".")[2]
-            mapx = getattr(prefs,t)
-            modx = ""
-            if "+" in mapx:
-                modx,ign,mapt = mapx.partition("+")
-            else:
-                mapt = mapx
-            ctrl,shift,alt,oskey = map(lambda _:_ in modx.upper(),"CSAO")
-            mapt = mapt.strip()
-            kmi = km.keymap_items.new(
-                    opn, type=mapt, value="PRESS",
-                    shift=shift, ctrl=ctrl, alt=alt, oskey=oskey)
-            tkit.mapdata.append((km,kmi))
-    bpy.types.VIEW3D_MT_edit_mesh_edges.append(tkit.menudraw)
-    bpy.types.VIEW3D_PT_tools_meshedit.append(tkit.menu.draw)
-
+        kmi = km.keymap_items.new(
+                "tkit.ie",type="QUOTE",value="PRESS")
+        kmis.append(kmi)
+        kmi = km.keymap_items.new(
+                "tkit.oe",type="QUOTE",shift=True,value="PRESS")
+        kmis.append(kmi)
+        kmi = km.keymap_items.new(
+                "tkit.lon",type="RIGHT_BRACKET",value="PRESS")
+        kmis.append(kmi)
+        kmi = km.keymap_items.new(
+                "tkit.lun",type="LEFT_BRACKET",value="PRESS")
+        kmis.append(kmi)
+        kmi = km.keymap_items.new(
+                "tkit.epz",type="END",ctrl=True,alt=True,shift=True,value="PRESS")
+        kmis.append(kmi)
+        kmi = km.keymap_items.new(
+                "tkit.ef1n",type="BACK_SLASH",value="PRESS")
+        kmis.append(kmi)
+        kmi = km.keymap_items.new(
+                "tkit.ef2n",type="BACK_SLASH",shift=True,value="PRESS")
+        kmis.append(kmi)
+        kmi = km.keymap_items.new(
+                "tkit.ef2np",type="BACK_SLASH",ctrl=True,shift=True,value="PRESS")
+        kmis.append(kmi)
+        kmi = km.keymap_items.new(
+                "tkit.ef2nx",type="BACK_SLASH",alt=True,ctrl=True,shift=True,value="PRESS")
+        kmis.append(kmi)
+        print("kmis:",kmis)
 def unregister():
-    for km,kmi in tkit.mapdata:
+    for kmi in kmis:
         km.keymap_items.remove(kmi)
-    tkit.mapdata.clear()
-    bpy.types.VIEW3D_MT_edit_mesh_edges.remove(tkit.menudraw)
-    bpy.types.VIEW3D_PT_tools_meshedit.remove(tkit.menu.draw)
-    bpy.utils.unregister_class(tkitPrefs)
-    list(map(bpy.utils.unregister_class,tkit.classes))
+
+    bpy.utils.unregister_class(TKIT_MT_menu)
+    bpy.utils.unregister_class(TKIT_OT_ie)
+    bpy.utils.unregister_class(TKIT_OT_oe)
+    bpy.utils.unregister_class(TKIT_OT_lon)
+    bpy.utils.unregister_class(TKIT_OT_lun)
+    bpy.utils.unregister_class(TKIT_OT_epz)
+    bpy.utils.unregister_class(TKIT_OT_ef1n)
+    bpy.utils.unregister_class(TKIT_OT_ef2n)
+    bpy.utils.unregister_class(TKIT_OT_ef2np)
+    bpy.utils.unregister_class(TKIT_OT_ef2nx)
+
 
