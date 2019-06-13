@@ -52,6 +52,7 @@ notselected = lambda _: not _.select
 tagged = lambda _: _.tag
 nottagged = lambda _: not _.tag
 
+
 class TKIT_OT_lon(bpy.types.Operator):
     bl_idname = "tkit.lon"
     bl_label = "lon"
@@ -87,7 +88,6 @@ class TKIT_OT_lon(bpy.types.Operator):
         return {"FINISHED"}
 
 
-
 class TKIT_OT_ie(bpy.types.Operator):
     bl_idname = "tkit.ie"
     bl_label = "ie"
@@ -108,6 +108,7 @@ class TKIT_OT_ie(bpy.types.Operator):
         bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
         context.area.tag_redraw()
         return {'FINISHED'}
+
 
 class TKIT_OT_oe(bpy.types.Operator):
     bl_idname = "tkit.oe"
@@ -154,6 +155,7 @@ class TKIT_OT_lun(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
+
 class TKIT_OT_epz(bpy.types.Operator):
     bl_idname = "tkit.epz"
     bl_label = "epz"
@@ -180,6 +182,7 @@ class TKIT_OT_epz(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
+
 class TKIT_OT_ef1n(bpy.types.Operator):
     bl_idname = "tkit.ef1n"
     bl_label = "ef1n"
@@ -202,6 +205,7 @@ class TKIT_OT_ef1n(bpy.types.Operator):
         bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
         context.area.tag_redraw()
         return {'FINISHED'}
+
 
 class TKIT_OT_ef2n(bpy.types.Operator):
     bl_idname = "tkit.ef2n"
@@ -226,6 +230,7 @@ class TKIT_OT_ef2n(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
+
 class TKIT_OT_ef2np(bpy.types.Operator):
     bl_idname = "tkit.ef2np"
     bl_label = "ef2np"
@@ -249,6 +254,7 @@ class TKIT_OT_ef2np(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
+
 class TKIT_OT_ef2nx(bpy.types.Operator):
     bl_idname = "tkit.ef2nx"
     bl_label = "ef2nx"
@@ -271,8 +277,11 @@ class TKIT_OT_ef2nx(bpy.types.Operator):
         bmesh.update_edit_mesh(context.active_object.data,loop_triangles=False,destructive=False)
         context.area.tag_redraw()
         return {'FINISHED'}
+
+
 km = None
 kmis = []
+
 def register():
     global km
     kmis.clear()
@@ -291,38 +300,19 @@ def register():
     kc = wm.keyconfigs.addon
     if kc:
         km = kc.keymaps.new("Mesh",space_type="EMPTY")
-        kmi = km.keymap_items.new(
-                "tkit.ie",type="QUOTE",value="PRESS")
-        kmis.append(kmi)
-        kmi = km.keymap_items.new(
-                "tkit.oe",type="QUOTE",shift=True,value="PRESS")
-        kmis.append(kmi)
-        kmi = km.keymap_items.new(
-                "tkit.lon",type="RIGHT_BRACKET",value="PRESS")
-        kmis.append(kmi)
-        kmi = km.keymap_items.new(
-                "tkit.lun",type="LEFT_BRACKET",value="PRESS")
-        kmis.append(kmi)
-        kmi = km.keymap_items.new(
-                "tkit.epz",type="END",ctrl=True,alt=True,shift=True,value="PRESS")
-        kmis.append(kmi)
-        kmi = km.keymap_items.new(
-                "tkit.ef1n",type="BACK_SLASH",value="PRESS")
-        kmis.append(kmi)
-        kmi = km.keymap_items.new(
-                "tkit.ef2n",type="BACK_SLASH",shift=True,value="PRESS")
-        kmis.append(kmi)
-        kmi = km.keymap_items.new(
-                "tkit.ef2np",type="BACK_SLASH",ctrl=True,shift=True,value="PRESS")
-        kmis.append(kmi)
-        kmi = km.keymap_items.new(
-                "tkit.ef2nx",type="BACK_SLASH",alt=True,ctrl=True,shift=True,value="PRESS")
-        kmis.append(kmi)
-        print("kmis:",kmis)
+        kmis.append(km.keymap_items.new("tkit.ie",type="QUOTE",value="PRESS"))
+        kmis.append(km.keymap_items.new("tkit.oe",type="QUOTE",shift=True,value="PRESS"))
+        kmis.append(km.keymap_items.new("tkit.lon",type="RIGHT_BRACKET",value="PRESS"))
+        kmis.append(km.keymap_items.new("tkit.lun",type="LEFT_BRACKET",value="PRESS"))
+        kmis.append(km.keymap_items.new("tkit.epz",type="END",ctrl=True,alt=True,shift=True,value="PRESS"))
+        kmis.append(km.keymap_items.new("tkit.ef1n",type="BACK_SLASH",value="PRESS"))
+        kmis.append(km.keymap_items.new("tkit.ef2n",type="BACK_SLASH",shift=True,value="PRESS"))
+        kmis.append(km.keymap_items.new("tkit.ef2np",type="BACK_SLASH",ctrl=True,shift=True,value="PRESS"))
+        kmis.append(km.keymap_items.new("tkit.ef2nx",type="BACK_SLASH",alt=True,ctrl=True,shift=True,value="PRESS"))
+
 def unregister():
     for kmi in kmis:
         km.keymap_items.remove(kmi)
-
     bpy.utils.unregister_class(TKIT_MT_menu)
     bpy.utils.unregister_class(TKIT_OT_ie)
     bpy.utils.unregister_class(TKIT_OT_oe)
@@ -333,5 +323,4 @@ def unregister():
     bpy.utils.unregister_class(TKIT_OT_ef2n)
     bpy.utils.unregister_class(TKIT_OT_ef2np)
     bpy.utils.unregister_class(TKIT_OT_ef2nx)
-
 
