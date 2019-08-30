@@ -9,7 +9,7 @@ Be in edge mode
 
 Make a selection
 
-##press buttons and see what happens##
+^(just press buttons and see what happens)
 
 
 quote -> inner edges left selected ( it shrinks bit by bit leaving some edges still selected )
