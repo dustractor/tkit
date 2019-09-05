@@ -56,6 +56,7 @@ nottagged = lambda _: not _.tag
 class TKIT_OT_lon(bpy.types.Operator):
     bl_idname = "tkit.lon"
     bl_label = "lon"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
@@ -91,6 +92,7 @@ class TKIT_OT_lon(bpy.types.Operator):
 class TKIT_OT_ie(bpy.types.Operator):
     bl_idname = "tkit.ie"
     bl_label = "ie"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
@@ -113,6 +115,7 @@ class TKIT_OT_ie(bpy.types.Operator):
 class TKIT_OT_oe(bpy.types.Operator):
     bl_idname = "tkit.oe"
     bl_label = "oe"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
@@ -135,6 +138,7 @@ class TKIT_OT_oe(bpy.types.Operator):
 class TKIT_OT_lun(bpy.types.Operator):
     bl_idname = "tkit.lun"
     bl_label = "lun"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
@@ -159,6 +163,7 @@ class TKIT_OT_lun(bpy.types.Operator):
 class TKIT_OT_epz(bpy.types.Operator):
     bl_idname = "tkit.epz"
     bl_label = "epz"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
@@ -186,6 +191,7 @@ class TKIT_OT_epz(bpy.types.Operator):
 class TKIT_OT_ef1n(bpy.types.Operator):
     bl_idname = "tkit.ef1n"
     bl_label = "ef1n"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
@@ -210,6 +216,7 @@ class TKIT_OT_ef1n(bpy.types.Operator):
 class TKIT_OT_ef2n(bpy.types.Operator):
     bl_idname = "tkit.ef2n"
     bl_label = "ef2n"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
@@ -234,6 +241,7 @@ class TKIT_OT_ef2n(bpy.types.Operator):
 class TKIT_OT_ef2np(bpy.types.Operator):
     bl_idname = "tkit.ef2np"
     bl_label = "ef2np"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
@@ -258,6 +266,7 @@ class TKIT_OT_ef2np(bpy.types.Operator):
 class TKIT_OT_ef2nx(bpy.types.Operator):
     bl_idname = "tkit.ef2nx"
     bl_label = "ef2nx"
+    bl_options = {"UNDO"}
     @classmethod
     def poll(self,context):
         return (context.active_object and
